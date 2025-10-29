@@ -1,0 +1,40 @@
+Database SchoolEventManagement already exists
+Changed database context to 'SchoolEventManagement'.
+Msg 3726, Level 16, State 1, Server phong, Line 14
+Could not drop object 'Departments' because it is referenced by a FOREIGN KEY constraint.
+Msg 2714, Level 16, State 6, Server phong, Line 3
+There is already an object named 'Departments' in the database.
+✅ Database schema created successfully!
+Msg 2627, Level 14, State 1, Server phong, Line 7
+Violation of UNIQUE KEY constraint 'UQ__Departme__EBC3495E6004DA44'. Cannot insert duplicate key in object 'dbo.Departments'. The duplicate key value is (CNTT).
+The statement has been terminated.
+
+(8 rows affected)
+
+(7 rows affected)
+
+(5 rows affected)
+
+(11 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+
+(1 rows affected)
+✅ Sample data inserted successfully!
+✅ Authentication stored procedures created successfully!
+🎉 Complete database setup finished successfully!
+📊 Database: SchoolEventManagement
+👥 Sample users created (password for all: password123)
+   - admin@school.edu.vn (Admin)
+   - teacher1@school.edu.vn (Teacher)
+   - student1@school.edu.vn (Student)
+🎯 Sample events and data inserted
+⚙️ Stored procedures ready for authentication
+ 
+✅ Ready to use!

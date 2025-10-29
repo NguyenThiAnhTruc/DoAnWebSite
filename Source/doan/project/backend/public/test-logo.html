@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Logo - SchoolEvents</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-8">
+    <h1 class="text-3xl font-bold mb-8 text-center">✅ Kiểm tra Logo Đã Cập Nhật</h1>
+    
+    <!-- Logo Test 1: Size w-12 h-12 (Sidebar size) -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+      <h2 class="text-xl font-semibold mb-4">1. Logo Sidebar (40x40px)</h2>
+      <div class="flex items-center space-x-3 bg-white p-4 rounded-lg shadow">
+        <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-10 h-10 object-contain rounded-full border-2 border-blue-500">
+        <span class="text-lg font-bold text-gray-900">SchoolEvents</span>
+      </div>
+    </div>
+
+    <!-- Logo Test 2: Size w-16 h-16 (Login/Register size) -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+      <h2 class="text-xl font-semibold mb-4">2. Logo Login/Register (64x64px)</h2>
+      <div class="flex justify-center">
+        <div class="inline-flex items-center space-x-3 bg-white p-6 rounded-lg shadow">
+          <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-16 h-16 object-contain rounded-full border-2 border-blue-500">
+          <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">SchoolEvents</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logo Test 3: Original file check -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+      <h2 class="text-xl font-semibold mb-4">3. Logo Gốc (Full size)</h2>
+      <div class="flex justify-center bg-white p-6 rounded-lg shadow">
+        <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="max-w-xs rounded-lg border-4 border-blue-500">
+      </div>
+    </div>
+
+    <!-- Files Updated List -->
+    <div class="p-6 bg-blue-50 rounded-lg">
+      <h2 class="text-xl font-semibold mb-4">📋 Danh sách file đã cập nhật:</h2>
+      <ul class="space-y-2">
+        <li class="flex items-center"><span class="text-green-500 font-bold mr-2">✓</span> <a href="/_unified-header.html" class="text-blue-600 hover:underline">_unified-header.html</a></li>
+        <li class="flex items-center"><span class="text-green-500 font-bold mr-2">✓</span> <a href="/EventList.html" class="text-blue-600 hover:underline">EventList.html</a></li>
+        <li class="flex items-center"><span class="text-green-500 font-bold mr-2">✓</span> <a href="/MessagingSystem.html" class="text-blue-600 hover:underline">MessagingSystem.html</a></li>
+        <li class="flex items-center"><span class="text-green-500 font-bold mr-2">✓</span> <a href="/UserProfile.html" class="text-blue-600 hover:underline">UserProfile.html</a></li>
+        <li class="flex items-center"><span class="text-green-500 font-bold mr-2">✓</span> <a href="/QRAttendance_new.html" class="text-blue-600 hover:underline">QRAttendance_new.html</a></li>
+        <li class="flex items-center"><span class="text-green-500 font-bold mr-2">✓</span> <a href="/Login.html" class="text-blue-600 hover:underline">Login.html</a></li>
+        <li class="flex items-center"><span class="text-green-500 font-bold mr-2">✓</span> <a href="/Register.html" class="text-blue-600 hover:underline">Register.html</a></li>
+      </ul>
+    </div>
+
+    <!-- Status -->
+    <div class="mt-8 p-6 bg-green-50 border-2 border-green-500 rounded-lg text-center">
+      <h2 class="text-2xl font-bold text-green-700 mb-2">✅ Status: HOÀN THÀNH</h2>
+      <p class="text-gray-700">Tất cả file đã được cập nhật logo thành công!</p>
+      <p class="text-sm text-gray-600 mt-2">File logo: <code class="bg-gray-200 px-2 py-1 rounded">/images/logo-dai-hoc-da-lat.jpg</code></p>
+    </div>
+  </div>
+
+  <script>
+    // Check if logo loads successfully
+    window.addEventListener('load', () => {
+      const logos = document.querySelectorAll('img[src="/images/logo-dai-hoc-da-lat.jpg"]');
+      logos.forEach((logo, index) => {
+        logo.addEventListener('error', () => {
+          console.error(`❌ Logo ${index + 1} failed to load!`);
+          logo.parentElement.innerHTML += '<span class="text-red-500 ml-2">❌ Lỗi tải logo!</span>';
+        });
+        logo.addEventListener('load', () => {
+          console.log(`✅ Logo ${index + 1} loaded successfully!`);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

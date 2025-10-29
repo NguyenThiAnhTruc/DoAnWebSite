@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Thông báo - SchoolEvents</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="/js/theme.js"></script>
+<style>
+  .pop { 
+    opacity:0; 
+    transform:translateY(-10px) scale(.95); 
+    pointer-events: none;
+  }
+  .pop.show { 
+    opacity:1; 
+    transform:translateY(0) scale(1); 
+    transition:.2s ease;
+    pointer-events: auto;
+  }
+  
+  /* Animation cho badge */
+  @keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+  
+  .badge-animate {
+    animation: bounce 0.5s ease-in-out;
+  }
+  
+  /* Scrollbar tùy chỉnh */
+  #list::-webkit-scrollbar {
+    width: 6px;
+  }
+  #list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  #list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+  #list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <header class="p-4 bg-white shadow sticky top-0 z-40">
+    <div class="max-w-5xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-10 h-10 object-contain rounded-full">
+        <span class="text-lg font-bold text-gray-900">SchoolEvents</span>
+      </div>
+      
+      <div class="relative" id="dropdownRoot">
+        <button id="bellBtn" class="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <i data-lucide="bell" class="w-5 h-5 text-gray-600"></i>
+          <span id="badge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-lg">0</span>
+        </button>
+
+        <!-- Panel Dropdown -->
+        <div id="panel" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden pop">
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3 text-white">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                <h3 class="font-semibold text-lg">Thông báo</h3>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button id="markAll" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Đánh dấu tất cả đã đọc">
+                  <i data-lucide="check-check" class="w-4 h-4"></i>
+                </button>
+                <button id="clearAll" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Xóa tất cả">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+                <button id="closePanel" class="p-1.5 hover:bg-white/20 rounded transition-colors">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danh sách thông báo -->
+          <div id="list" class="max-h-96 overflow-y-auto divide-y divide-gray-200"></div>
+
+          <!-- Footer -->
+          <div id="footer" class="border-t border-gray-200 p-3 bg-gray-50">
+            <button class="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2 hover:bg-blue-50 rounded-lg transition-colors">
+              Xem tất cả thông báo
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Nội dung demo -->
+  <main class="max-w-5xl mx-auto p-8">
+    <div class="bg-white rounded-xl shadow-lg p-8">
+      <h1 class="text-2xl font-bold text-gray-900 mb-4">Hệ thống thông báo</h1>
+      <p class="text-gray-600 mb-6">Nhấn vào biểu tượng chuông ở góc trên bên phải để xem thông báo.</p>
+      
+      <div class="space-y-4">
+        <button id="addNotif" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all">
+          <i data-lucide="plus" class="w-4 h-4 inline-block mr-2"></i>
+          Thêm thông báo mới
+        </button>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+            <i data-lucide="check-circle" class="w-8 h-8 text-green-600 mb-2"></i>
+            <h3 class="font-semibold text-green-900">Thành công</h3>
+            <p class="text-sm text-green-700">Thông báo tích cực</p>
+          </div>
+          <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <i data-lucide="alert-triangle" class="w-8 h-8 text-yellow-600 mb-2"></i>
+            <h3 class="font-semibold text-yellow-900">Cảnh báo</h3>
+            <p class="text-sm text-yellow-700">Thông báo quan trọng</p>
+          </div>
+          <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+            <i data-lucide="x-circle" class="w-8 h-8 text-red-600 mb-2"></i>
+            <h3 class="font-semibold text-red-900">Lỗi</h3>
+            <p class="text-sm text-red-700">Thông báo lỗi</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script>
+  // ==== DỮ LIỆU GIẢ ====
+  let notifications = [
+    { id:'n1', type:'success', title:'Đăng ký thành công', message:'Bạn đã đăng ký sự kiện Workshop AI & Machine Learning.', timestamp:new Date(Date.now()-5*60*1000).toISOString(), read:false },
+    { id:'n2', type:'warning', title:'Sự kiện sắp diễn ra', message:'Sự kiện Giao lưu văn hóa bắt đầu sau 1 giờ nữa.', timestamp:new Date(Date.now()-2*60*60*1000).toISOString(), read:false },
+    { id:'n3', type:'error', title:'Lỗi hệ thống', message:'Không thể gửi email nhắc lịch. Vui lòng thử lại.', timestamp:new Date(Date.now()-26*60*60*1000).toISOString(), read:true },
+    { id:'n4', type:'info', title:'Cập nhật mới', message:'Hệ thống đã được nâng cấp lên phiên bản 2.0.', timestamp:new Date(Date.now()-48*60*60*1000).toISOString(), read:true },
+  ];
+
+  const dropdownRoot = document.getElementById('dropdownRoot');
+  const bellBtn = document.getElementById('bellBtn');
+  const panel = document.getElementById('panel');
+  const badge = document.getElementById('badge');
+  const list = document.getElementById('list');
+  const markAll = document.getElementById('markAll');
+  const clearAll = document.getElementById('clearAll');
+  const closePanel = document.getElementById('closePanel');
+  const addNotif = document.getElementById('addNotif');
+
+  // ==== HÀM TIỆN ÍCH ====
+  function fmtAgo(ts){
+    const date=new Date(ts), now=new Date();
+    const diffH = Math.floor((now-date)/36e5);
+    if(diffH<1){ 
+      const m=Math.floor((now-date)/6e4); 
+      return m<1?'Vừa xong':`${m} phút trước`; 
+    }
+    if(diffH<24) return `${diffH} giờ trước`;
+    const days = Math.floor(diffH/24);
+    if(days<7) return `${days} ngày trước`;
+    return date.toLocaleDateString('vi-VN');
+  }
+  
+  function icon(type){
+    return type==='success'?'check-circle':
+           type==='warning'?'alert-triangle':
+           type==='error'?'x-circle':'info';
+  }
+  
+  function iconColor(type){
+    return type==='success'?'text-green-500':
+           type==='warning'?'text-yellow-500':
+           type==='error'?'text-red-500':'text-blue-500';
+  }
+
+  // ==== RENDER THÔNG BÁO ====
+  function render(){
+    const unread = notifications.filter(n=>!n.read).length;
+    
+    // Cập nhật badge
+    if(unread>0){ 
+      badge.textContent = unread>9?'9+':unread; 
+      badge.classList.remove('hidden');
+      badge.classList.add('badge-animate');
+      setTimeout(()=>badge.classList.remove('badge-animate'), 500);
+    } else { 
+      badge.classList.add('hidden'); 
+    }
+
+    // Render danh sách
+    list.innerHTML='';
+    if(notifications.length===0){
+      list.innerHTML=`
+        <div class="p-12 text-center">
+          <i data-lucide="bell-off" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+          <p class="text-gray-500 font-medium">Không có thông báo nào</p>
+          <p class="text-sm text-gray-400 mt-2">Thông báo mới sẽ xuất hiện ở đây</p>
+        </div>`;
+      document.getElementById('footer').classList.add('hidden');
+    } else {
+      document.getElementById('footer').classList.remove('hidden');
+      
+      notifications.forEach((n,idx)=>{
+        const row = document.createElement('div');
+        row.className = `p-4 hover:bg-gray-50 transition-colors cursor-pointer ${!n.read?'bg-blue-50 border-l-4 border-blue-500':''}`;
+        row.innerHTML = `
+          <div class="flex items-start space-x-3">
+            <div class="mt-1 flex-shrink-0">
+              <i data-lucide="${icon(n.type)}" class="w-5 h-5 ${iconColor(n.type)}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <p class="text-sm font-semibold text-gray-900">${n.title}</p>
+                    ${!n.read?'<span class="w-2 h-2 bg-blue-500 rounded-full"></span>':''}
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1 line-clamp-2">${n.message}</p>
+                  <div class="flex items-center gap-2 mt-2">
+                    <i data-lucide="clock" class="w-3 h-3 text-gray-400"></i>
+                    <p class="text-xs text-gray-500">${fmtAgo(n.timestamp)}</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-1 flex-shrink-0">
+                  ${!n.read?`
+                    <button data-mark="${n.id}" class="p-1.5 hover:bg-blue-100 rounded transition-colors" title="Đánh dấu đã đọc">
+                      <i data-lucide="check" class="w-3.5 h-3.5 text-blue-600"></i>
+                    </button>
+                  `:''}
+                  <button data-del="${n.id}" class="p-1.5 hover:bg-red-100 rounded transition-colors" title="Xóa">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5 text-red-500"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+        list.appendChild(row);
+      });
+    }
+    
+    lucide.createIcons();
+
+    // Bind actions
+    list.querySelectorAll('[data-mark]').forEach(btn=>{
+      btn.onclick=(e)=>{ 
+        e.stopPropagation();
+        const id=btn.getAttribute('data-mark'); 
+        const n=notifications.find(x=>x.id===id); 
+        if(n){ 
+          n.read=true; 
+          render(); 
+        } 
+      };
+    });
+    
+    list.querySelectorAll('[data-del]').forEach(btn=>{
+      btn.onclick=(e)=>{ 
+        e.stopPropagation();
+        const id=btn.getAttribute('data-del'); 
+        notifications = notifications.filter(x=>x.id!==id); 
+        render(); 
+      };
+    });
+  }
+
+  // ==== TOGGLE PANEL ====
+  function togglePanel(show){
+    const isHidden = panel.classList.contains('hidden');
+    
+    if(show && isHidden){
+      panel.classList.remove('hidden');
+      requestAnimationFrame(()=>{
+        panel.classList.add('show');
+      });
+    } else if(!show && !isHidden) {
+      panel.classList.remove('show');
+      setTimeout(()=>panel.classList.add('hidden'), 200);
+    }
+  }
+
+  // ==== EVENTS ====
+  bellBtn.onclick = (e)=>{
+    e.stopPropagation();
+    togglePanel(!panel.classList.contains('show'));
+  };
+  
+  closePanel.onclick = ()=>togglePanel(false);
+  
+  markAll.onclick = ()=>{ 
+    if(confirm('Đánh dấu tất cả thông báo là đã đọc?')){
+      notifications.forEach(n=>n.read=true); 
+      render(); 
+    }
+  };
+  
+  clearAll.onclick = ()=>{ 
+    if(confirm('Xóa tất cả thông báo?')){
+      notifications=[]; 
+      render(); 
+    }
+  };
+
+  // Đóng khi click bên ngoài
+  document.addEventListener('click', (e)=>{
+    if(!dropdownRoot.contains(e.target) && !panel.classList.contains('hidden')) {
+      togglePanel(false);
+    }
+  });
+
+  // Thêm thông báo mới (demo)
+  addNotif.onclick = ()=>{
+    const types = ['success', 'warning', 'error', 'info'];
+    const titles = {
+      success: 'Thành công',
+      warning: 'Cảnh báo',
+      error: 'Lỗi',
+      info: 'Thông tin'
+    };
+    const messages = {
+      success: 'Hành động của bạn đã được thực hiện thành công!',
+      warning: 'Bạn cần chú ý đến thông báo này!',
+      error: 'Đã xảy ra lỗi trong quá trình xử lý!',
+      info: 'Đây là thông tin cập nhật mới nhất.'
+    };
+    
+    const type = types[Math.floor(Math.random()*types.length)];
+    const newNotif = {
+      id: 'n'+(Date.now()),
+      type: type,
+      title: titles[type],
+      message: messages[type],
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+    
+    notifications.unshift(newNotif);
+    render();
+    
+    // Hiển thị panel nếu đang đóng
+    if(panel.classList.contains('hidden')){
+      togglePanel(true);
+    }
+  };
+
+  // ==== INIT ====
+  render();
+  lucide.createIcons();
+</script>
+</body>
+</html>

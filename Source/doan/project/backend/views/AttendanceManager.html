@@ -1,0 +1,945 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SchoolEvents - Điểm danh</title>
+<script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; }
+  /* Sidebar slide (mobile) */
+  .sidebar { transform: translateX(-300px); transition: transform .3s ease; }
+  .sidebar.open { transform: translateX(0); }
+  .overlay { background: rgba(0,0,0,.5); }
+  @media (min-width: 1024px) {
+    .sidebar { transform: translateX(0) !important; }
+    .overlay { display: none !important; }
+  }
+  .fade { opacity:0; transform:translateY(10px); }
+  .fade.show { opacity:1; transform:translateY(0); transition:.25s ease; }
+  .btn-press:active { transform:scale(.98); }
+</style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+
+<div id="app" class="min-h-screen flex">
+  <!-- Sidebar (left) -->
+  <aside id="sidebar" class="sidebar fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl lg:shadow-none">
+    <div class="flex flex-col h-full">
+      <!-- Brand -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-10 h-10 object-contain rounded-full">
+          <span class="text-lg font-bold text-gray-900 dark:text-white">SchoolEvents</span>
+        </div>
+        <button id="btnCloseSidebar" class="lg:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800" aria-label="Đóng">
+          <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- User -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <i data-lucide="user" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h3 id="userName" class="font-semibold text-gray-900 dark:text-white">Admin</h3>
+            <p id="userRole" class="text-sm text-gray-500 dark:text-gray-400">Admin</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+            <div id="upcomingCount" class="text-2xl font-bold text-blue-600">0</div>
+            <div class="text-xs text-blue-600">Sự kiện sắp tới</div>
+          </div>
+          <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 text-center">
+            <div id="joinedCount" class="text-2xl font-bold text-purple-600">0</div>
+            <div class="text-xs text-purple-600">Đã tham gia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu (dynamic by role) -->
+      <nav id="menu" class="flex-1 p-4 space-y-2" aria-label="Menu chức năng">
+        <!-- menu items populated by JS based on role -->
+      </nav>
+
+      <!-- Logout -->
+      <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <button id="logoutBtn" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 dark:bg-red-900/20 rounded-xl">
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          <span class="font-medium">Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay (mobile) -->
+  <div id="overlay" class="overlay fixed inset-0 z-40 lg:hidden hidden"></div>
+
+  <!-- Main (right) -->
+  <main class="flex-1 flex flex-col">
+    <!-- Topbar -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button id="btnOpenSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800" aria-label="Mở menu">
+            <i data-lucide="menu" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <div>
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Điểm danh</h1>
+            <p id="welcomeText" class="text-sm text-gray-500 dark:text-gray-400">Chào mừng trở lại, Admin</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <!-- Notification Button with Badge -->
+          <button id="btnNotifications" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
+            <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="notificationBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium animate-pulse">0</span>
+          </button>
+          <!-- Notification Dropdown -->
+          <div id="notificationDropdown" class="hidden absolute right-6 top-16 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 class="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
+              <div class="flex items-center space-x-2">
+                <button id="btnMarkAllRead" class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400">Đánh dấu đã đọc</button>
+                <button id="btnClearAllRead" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400">Xóa đã đọc</button>
+              </div>
+            </div>
+            <div id="notificationList" class="max-h-96 overflow-y-auto">
+              <!-- Notifications will be inserted here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <section class="flex-1 overflow-auto p-8"
+    <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Chọn sự kiện</label>
+          <select id="selEvent" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500" 
+                  title="Chọn sự kiện để hiển thị danh sách điểm danh" 
+                  aria-label="Chọn sự kiện">
+            <option value="">-- Chọn sự kiện --</option>
+          </select>
+        </div>
+        <div id="eventActions" class="hidden md:flex gap-3">
+          <button id="btnAllPresent" class="px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 btn-press flex items-center">
+            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i><span>Điểm danh tất cả</span>
+          </button>
+          <button id="btnExport" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 btn-press flex items-center">
+            <i data-lucide="download" class="w-5 h-5 mr-2"></i><span>Xuất Excel</span>
+          </button>
+          <button id="btnQR" class="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 btn-press flex items-center">
+            <i data-lucide="qr-code" class="w-5 h-5 mr-2"></i><span>QR Code</span>
+          </button>
+        </div>
+      </div>
+      <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Chọn một sự kiện để hiển thị bảng điểm danh ở bên dưới.</p>
+    </section>
+
+    <!-- ===== Panel điểm danh (adapt từ file AttendanceManager (2).html) ===== -->
+    <div id="content" class="hidden">
+      <!-- Thống kê -->
+      <section class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border">
+          <div id="statTotal" class="text-2xl font-bold">0</div>
+          <div class="text-sm text-gray-600 dark:text-gray-300">Tổng số</div>
+        </div>
+        <div class="rounded-xl p-4 border bg-green-50 dark:bg-green-900/20 border-green-200">
+          <div id="statPresent" class="text-2xl font-bold text-green-600">0</div>
+          <div class="text-sm text-green-600">Có mặt</div>
+        </div>
+        <div class="rounded-xl p-4 border bg-red-50 dark:bg-red-900/20 border-red-200">
+          <div id="statAbsent" class="text-2xl font-bold text-red-600">0</div>
+          <div class="text-sm text-red-600">Vắng mặt</div>
+        </div>
+        <div class="rounded-xl p-4 border bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200">
+          <div id="statLate" class="text-2xl font-bold text-yellow-600">0</div>
+          <div class="text-sm text-yellow-600">Đi muộn</div>
+        </div>
+        <div class="rounded-xl p-4 border bg-gray-50 dark:bg-gray-900">
+          <div id="statNot" class="text-2xl font-bold text-gray-600 dark:text-gray-300">0</div>
+          <div class="text-sm text-gray-600 dark:text-gray-300">Chưa điểm danh</div>
+        </div>
+      </section>
+
+      <!-- Bộ lọc -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="relative">
+            <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="inpSearch" type="text" placeholder="Tìm theo tên hoặc MSSV..." class="w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500"/>
+          </div>
+          <select id="selStatus" class="px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500"
+                  title="Lọc theo trạng thái điểm danh"
+                  aria-label="Lọc theo trạng thái điểm danh">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="present">Có mặt</option>
+            <option value="absent">Vắng mặt</option>
+            <option value="late">Đi muộn</option>
+          </select>
+          <div class="text-sm text-gray-600 dark:text-gray-300 flex items-center">
+            <i data-lucide="users" class="w-4 h-4 mr-2"></i>
+            Hiển thị <span id="shownCount" class="mx-1 font-medium">0</span>/<span id="totalCount" class="ml-1">0</span> sinh viên
+          </div>
+        </div>
+      </section>
+
+      <!-- Bảng -->
+      <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-900">
+              <tr>
+                <th class="text-left py-4 px-6 font-semibold">Sinh viên</th>
+                <th class="text-left py-4 px-6 font-semibold">MSSV</th>
+                <th class="text-left py-4 px-6 font-semibold">Email</th>
+                <th class="text-left py-4 px-6 font-semibold">Trạng thái</th>
+                <th class="text-left py-4 px-6 font-semibold">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="tbody" class="divide-y"></tbody>
+          </table>
+        </div>
+        <div id="empty" class="hidden p-8 text-center">
+          <i data-lucide="users" class="w-16 h-16 text-gray-400 mx-auto mb-4"></i>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Không tìm thấy sinh viên</h3>
+          <p class="text-gray-600 dark:text-gray-300">Thử điều chỉnh bộ lọc để tìm thấy sinh viên phù hợp.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+<script>
+  // ===== USER & AUTH =====
+  let globalCurrentUser = null;
+  
+  // ===== Dữ liệu từ API =====
+  let events = [];
+  let registrations = [];
+  let attendance = [];
+
+  // Format event date/time into a human readable string (local timezone)
+  function formatEventDate(dt) {
+    if (!dt) return '';
+    try {
+      // dt might be already a Date object or an ISO string from SQL
+      const d = (dt instanceof Date) ? dt : new Date(dt);
+      if (isNaN(d.getTime())) return String(dt);
+      // Format as: YYYY-MM-DD HH:mm (24h) in local timezone
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${day} ${hh}:${mm}`;
+    } catch (e) {
+      return String(dt);
+    }
+  }
+
+  // Combine a SQL date (YYYY-MM-DD) and a SQL time (HH:mm[:ss]) into a JS Date in local timezone
+  function combineDateTime(datePart, timePart) {
+    try {
+      if (!datePart && !timePart) return null;
+      // If datePart is already a Date and timePart missing, return it
+      if (datePart instanceof Date && !timePart) return datePart;
+
+      // Parse date
+      const date = datePart instanceof Date ? datePart : new Date(String(datePart));
+      if (isNaN(date.getTime())) {
+        // Try manual parse YYYY-MM-DD
+        const m = String(datePart).match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (!m) return null;
+        const year = parseInt(m[1],10);
+        const month = parseInt(m[2],10) - 1;
+        const day = parseInt(m[3],10);
+        // default time if missing
+        if (!timePart) return new Date(year, month, day);
+        const t = String(timePart).trim().split(':');
+        const hh = parseInt(t[0]||0,10);
+        const mm = parseInt(t[1]||0,10);
+        const ss = parseInt(t[2]||0,10);
+        return new Date(year, month, day, hh, mm, ss);
+      }
+
+      // If timePart provided, use it to set hours/minutes
+      if (timePart) {
+        const t = String(timePart).trim().split(':');
+        const hh = parseInt(t[0]||0,10);
+        const mm = parseInt(t[1]||0,10);
+        const ss = parseInt(t[2]||0,10);
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hh, mm, ss);
+      }
+
+      // No timePart, return date at midnight local
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // Lấy token từ localStorage
+  const getToken = () => localStorage.getItem('token');
+  
+  // Fetch API với token
+  async function fetchAPI(url, options = {}) {
+    const token = getToken();
+    const headers = { 'Content-Type': 'application/json', ...options.headers };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    return response.json();
+  }
+  
+  // Load user info từ API
+  async function fetchCurrentUser() {
+    try {
+      const data = await fetchAPI('/api/auth/me');
+      globalCurrentUser = data.user || data;
+      
+      // Cập nhật UI
+      const fullName = `${globalCurrentUser.first_name || ''} ${globalCurrentUser.last_name || ''}`.trim() || globalCurrentUser.username || 'Admin';
+      const roleText = globalCurrentUser.role === 'admin' ? 'Admin' : 
+                       globalCurrentUser.role === 'teacher' ? 'Giáo viên' : 
+                       'Sinh viên';
+      
+      document.getElementById('userName').textContent = fullName;
+      document.getElementById('userRole').textContent = roleText;
+      document.getElementById('welcomeText').textContent = `Chào mừng trở lại, ${fullName}`;
+      
+      // Render icons
+      if (window.lucide && lucide.createIcons) lucide.createIcons();
+      
+    } catch (err) {
+      console.error('Error fetching user:', err);
+      // Fallback to localStorage
+      try {
+        globalCurrentUser = JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null');
+        if (globalCurrentUser) {
+          const fullName = `${globalCurrentUser.first_name || ''} ${globalCurrentUser.last_name || ''}`.trim() || globalCurrentUser.username || 'Admin';
+          const roleText = globalCurrentUser.role === 'admin' ? 'Admin' : 
+                           globalCurrentUser.role === 'teacher' ? 'Giáo viên' : 
+                           'Sinh viên';
+          document.getElementById('userName').textContent = fullName;
+          document.getElementById('userRole').textContent = roleText;
+          document.getElementById('welcomeText').textContent = `Chào mừng trở lại, ${fullName}`;
+          if (window.lucide && lucide.createIcons) lucide.createIcons();
+        }
+      } catch (e) {
+        console.error('Error parsing user from localStorage:', e);
+      }
+    }
+  }
+  
+  // Load events từ API
+  async function fetchEvents() {
+    try {
+      const data = await fetchAPI('/api/events');
+      // DEBUG: print raw events returned by API so developer can compare with SQL
+      try { console.debug && console.debug('DEBUG /api/events response:', data.events || data); } catch(e) {}
+      // Use SQL-provided start_date and format it for display so it matches DB values
+      events = (data.events || []).map(e => {
+        // Debug: keep raw event object for inspection if needed
+        // console.debug('event raw:', e);
+        const id = e.event_id || e.id;
+        const title = e.title || e.name || '';
+        const startDateRaw = e.start_date || e.startDate || null;
+        const startTimeRaw = e.start_time || e.startTime || null;
+        const combined = combineDateTime(startDateRaw, startTimeRaw);
+        const ev = {
+          id,
+          title,
+          start_date_raw: startDateRaw,
+          start_time_raw: startTimeRaw,
+          // display date uses combined date+time when available
+          date: combined ? formatEventDate(combined) : formatEventDate(startDateRaw)
+        };
+        // DEBUG: print each mapped event for easier inspection in browser console
+        try { console.debug && console.debug('DEBUG mapped event:', ev); } catch(e) {}
+        return ev;
+      });
+      
+      // Cập nhật dropdown với translation
+      const placeholder = window.LanguageService 
+        ? window.LanguageService.translate('selectEventPlaceholder', 'attendance')
+        : '-- Chọn sự kiện --';
+      selEvent.innerHTML = `<option value="">${placeholder}</option>`;
+      events.forEach(e => {
+        const o = document.createElement('option');
+        o.value = e.id;
+        // Display the formatted date (local timezone) so users see the same values as SQL
+        o.textContent = `${e.title} - ${e.date}`;
+        selEvent.appendChild(o);
+      });
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      const errorMsg = window.LanguageService
+        ? window.LanguageService.translate('errorLoadingEvents', 'attendance') 
+        : 'Không thể tải danh sách sự kiện';
+      alert(errorMsg);
+    }
+  }
+  
+  // Load registrations cho event
+  async function fetchRegistrations(eventId) {
+    try {
+      const data = await fetchAPI(`/api/events/${eventId}/registrations`);
+      registrations = (data.registrations || []).map(r => ({
+        id: r.registration_id,
+        eventId: eventId,
+        userId: r.user_id,
+        userName: `${r.first_name} ${r.last_name}`,
+        studentId: r.student_id,
+        userEmail: r.email,
+        userPhone: r.phone
+      }));
+    } catch (err) {
+      console.error('Error fetching registrations:', err);
+      registrations = [];
+    }
+  }
+  
+  // Load attendance cho event
+  async function fetchAttendance(eventId) {
+    try {
+      const data = await fetchAPI(`/api/attendance/event/${eventId}`);
+      attendance = (data.attendance || []).map(a => ({
+        eventId: eventId,
+        userId: a.userId,
+        status: a.status
+      }));
+    } catch (err) {
+      console.error('Error fetching attendance:', err);
+      attendance = [];
+    }
+  }
+  
+  // Mark attendance
+  async function markAttendanceAPI(eventId, userId, status) {
+    try {
+      await fetchAPI('/api/attendance/manual', {
+        method: 'POST',
+        body: JSON.stringify({ eventId, userId, status })
+      });
+      
+      // Cập nhật local state
+      const i = attendance.findIndex(a => a.eventId === eventId && a.userId === userId);
+      if (i >= 0) attendance[i].status = status;
+      else attendance.push({ eventId, userId, status });
+      
+      render();
+    } catch (err) {
+      console.error('Error marking attendance:', err);
+      alert('Không thể cập nhật điểm danh');
+    }
+  }
+
+  // ===== DOM =====
+  const $ = s => document.querySelector(s);
+  const selEvent = $('#selEvent');
+  const eventActions = $('#eventActions');
+  const content = $('#content');
+  const tbody = $('#tbody');
+  const empty = $('#empty');
+  const inpSearch = $('#inpSearch');
+  const selStatus = $('#selStatus');
+
+  function setIcons(){ lucide.createIcons(); }
+  
+  // Dịch status text theo ngôn ngữ hiện tại
+  function statusText(s){ 
+    if (!s || s === '') return window.LanguageService ? window.LanguageService.translate('pending', 'common') : 'Chưa điểm danh';
+    return window.LanguageService ? window.LanguageService.translateStatus(s) : s;
+  }
+  
+  function statusChip(s){
+    const cls = s==='present'?'text-green-600 bg-green-100 dark:bg-green-900/30':s==='absent'?'text-red-600 bg-red-100 dark:bg-red-900/30':s==='late'?'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30':'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800';
+    return `<span class="px-3 py-1 rounded-full text-xs font-medium ${cls}">${statusText(s)}</span>`;
+  }
+  
+  function getEventAttendance(eid){ return attendance.filter(a=>a.eventId===eid); }
+  function getStatus(eid,uid){ return attendance.find(a=>a.eventId===eid && a.userId===uid)?.status || null; }
+  
+  async function markAttendance(eid,uid,status){
+    await markAttendanceAPI(eid, uid, status);
+  }
+
+  // Init: Load events khi trang load
+  window.addEventListener('DOMContentLoaded', () => {
+    fetchEvents();
+    setIcons();
+  });
+
+  // Tính thống kê
+  function renderStats(eid){
+    const regs = registrations.filter(r=>r.eventId===eid);
+    const att = getEventAttendance(eid);
+    const present = att.filter(a=>a.status==='present').length;
+    const late = att.filter(a=>a.status==='late').length;
+    const notMarked = regs.length - att.length;
+    const absent = regs.length - att.filter(a=>a.status!=='absent').length;
+    $('#statTotal').textContent = regs.length;
+    $('#statPresent').textContent = present;
+    $('#statLate').textContent = late;
+    $('#statNot').textContent = notMarked;
+    $('#statAbsent').textContent = absent;
+    $('#totalCount').textContent = regs.length;
+  }
+
+  // Render bảng theo bộ lọc
+  async function render(){
+    const eid = selEvent.value;
+    if(!eid){ content.classList.add('hidden'); eventActions.classList.add('hidden'); return; }
+    
+    // Load dữ liệu từ API
+    await fetchRegistrations(eid);
+    await fetchAttendance(eid);
+    
+    content.classList.remove('hidden'); eventActions.classList.remove('hidden');
+    renderStats(eid);
+
+    const q = (inpSearch?.value||'').toLowerCase();
+    const flt = selStatus?.value || 'all';
+    const regsAll = registrations.filter(r=>r.eventId===eid);
+    const regs = regsAll.filter(r=>{
+      const matches = r.userName.toLowerCase().includes(q) || (r.studentId||'').toLowerCase().includes(q);
+      if(!matches) return false;
+      if(flt==='all') return true;
+      const st = getStatus(eid,r.userId);
+      if(!st) return flt==='absent';
+      return st===flt;
+    });
+
+    if($('#shownCount')) $('#shownCount').textContent = regs.length.toString();
+
+    tbody.innerHTML='';
+    if(regs.length===0){ empty.classList.remove('hidden'); }
+    else { empty.classList.add('hidden'); }
+
+    regs.forEach((r,idx)=>{
+      const tr=document.createElement('tr');
+      tr.className='hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900 fade';
+      const st = getStatus(eid,r.userId);
+      tr.innerHTML = `
+        <td class="py-4 px-6">
+          <div class="flex items-center">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+              <i data-lucide="user" class="w-5 h-5 text-white"></i>
+            </div>
+            <div>
+              <div class="font-medium text-gray-900 dark:text-white">${r.userName}</div>
+              <div class="text-sm text-gray-500 dark:text-gray-400">${r.userPhone||''}</div>
+            </div>
+          </div>
+        </td>
+        <td class="py-4 px-6">${r.studentId||'N/A'}</td>
+        <td class="py-4 px-6 text-gray-600 dark:text-gray-300">${r.userEmail||''}</td>
+        <td class="py-4 px-6">${statusChip(st||'')}</td>
+        <td class="py-4 px-6">
+          <div class="flex items-center space-x-2">
+            <button class="p-2 text-green-600 hover:bg-green-50 dark:bg-green-900/20 rounded-lg" title="Có mặt" data-act="present" data-uid="${r.userId}"><i data-lucide="check-circle" class="w-4 h-4"></i></button>
+            <button class="p-2 text-yellow-600 hover:bg-yellow-50 dark:bg-yellow-900/20 rounded-lg" title="Đi muộn" data-act="late" data-uid="${r.userId}"><i data-lucide="clock" class="w-4 h-4"></i></button>
+            <button class="p-2 text-red-600 hover:bg-red-50 dark:bg-red-900/20 rounded-lg" title="Vắng mặt" data-act="absent" data-uid="${r.userId}"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+          </div>
+        </td>`;
+      tbody.appendChild(tr);
+      setTimeout(()=>tr.classList.add('show'), 30+idx*20);
+    });
+
+    setIcons();
+
+    // Bind action buttons
+    tbody.querySelectorAll('button[data-act]').forEach(btn=>{
+      btn.onclick=()=>{
+        const act = btn.getAttribute('data-act');
+        const uid = btn.getAttribute('data-uid');
+        markAttendance(eid, uid, act);
+      };
+    });
+  }
+
+  // Sự kiện UI
+  selEvent.onchange = render;
+  if(inpSearch) inpSearch.oninput = render;
+  if(selStatus) selStatus.onchange = render;
+
+  // Hành động nhanh
+  document.getElementById('btnAllPresent').onclick = async ()=>{
+    const eid = selEvent.value;
+    const alertSelectEvent = window.LanguageService 
+      ? (window.LanguageService.getCurrentLanguage() === 'vi' ? 'Vui lòng chọn sự kiện' : 'Please select an event')
+      : 'Vui lòng chọn sự kiện';
+    const alertNoStudents = window.LanguageService
+      ? (window.LanguageService.getCurrentLanguage() === 'vi' ? 'Không có sinh viên đăng ký' : 'No students registered')
+      : 'Không có sinh viên đăng ký';
+    const alertSuccess = (count) => window.LanguageService
+      ? (window.LanguageService.getCurrentLanguage() === 'vi' 
+          ? `Đã điểm danh tất cả ${count} sinh viên có mặt` 
+          : `Marked all ${count} students as present`)
+      : `Đã điểm danh tất cả ${count} sinh viên có mặt`;
+    
+    if(!eid) return alert(alertSelectEvent);
+    const regs = registrations.filter(r=>r.eventId==eid);
+    if(regs.length===0) return alert(alertNoStudents);
+    
+    // Mark tất cả có mặt
+    for(const r of regs) {
+      await markAttendanceAPI(eid, r.userId, 'present');
+    }
+    alert(alertSuccess(regs.length));
+  };
+  // Replace existing btnExport.onclick with this code
+document.getElementById('btnExport').onclick = async () => {
+  const alertSelectEvent = window.LanguageService 
+    ? (window.LanguageService.getCurrentLanguage() === 'vi' ? 'Vui lòng chọn sự kiện' : 'Please select an event')
+    : 'Vui lòng chọn sự kiện';
+
+  if (!selEvent.value) {
+    return alert(alertSelectEvent);
+  }
+
+  try {
+    // Ensure registrations and attendance are up-to-date
+    await fetchRegistrations(selEvent.value);
+    await fetchAttendance(selEvent.value);
+
+    // Build rows for Excel
+    const rows = registrations.map((r, idx) => {
+      const st = getStatus(selEvent.value, r.userId) || 'pending';
+      // Map to human readable status if you want
+      const statusLabel = (st === 'present' && 'Có mặt') || (st === 'absent' && 'Vắng mặt') || (st === 'late' && 'Đi muộn') || (st === 'pending' && 'Chưa điểm danh') || st;
+
+      return {
+        'STT': idx + 1,
+        'Tên sinh viên': r.userName || '',
+        'MSSV': r.studentId || '',
+        'Email': r.userEmail || '',
+        'SĐT': r.userPhone || '',
+        'Trạng thái điểm danh': statusLabel,
+        'Sự kiện (ID)': r.eventId,
+        'Mã đăng ký': r.id || ''
+      };
+    });
+
+    if (rows.length === 0) {
+      return alert(window.LanguageService && window.LanguageService.getCurrentLanguage() === 'vi' ? 'Không có dữ liệu để xuất' : 'No data to export');
+    }
+
+    // Create worksheet & workbook using SheetJS
+    const ws = XLSX.utils.json_to_sheet(rows, { header: [
+      'STT','Tên sinh viên','MSSV','Email','SĐT','Trạng thái điểm danh','Sự kiện (ID)','Mã đăng ký'
+    ]});
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+
+    // Generate filename with event title if available
+    const event = events.find(e => String(e.id) === String(selEvent.value));
+    const safeTitle = event ? (event.title || `event_${selEvent.value}`).replace(/[\\/:*?"<>|]/g, '-') : `event_${selEvent.value}`;
+    const filename = `${safeTitle}_attendance_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`;
+
+    // Write and trigger download
+    XLSX.writeFile(wb, filename);
+
+    // Optional: Notify user
+    alert(window.LanguageService && window.LanguageService.getCurrentLanguage() === 'vi' ? 'Đã xuất file Excel' : 'Exported Excel file');
+  } catch (err) {
+    console.error('Export error:', err);
+    alert(window.LanguageService && window.LanguageService.getCurrentLanguage() === 'vi' ? 'Lỗi khi xuất file' : 'Error exporting file');
+  }
+};
+
+  // Chuyển hướng đến trang QR khi click nút QR Code
+  document.getElementById('btnQR').onclick = ()=>{ 
+    window.location.href = 'QRAttendance.html'; 
+  };
+
+  // ===== SIDEBAR TOGGLE (mobile) =====
+  (function bindSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const openBtn = document.getElementById("btnOpenSidebar");
+    const closeBtn = document.getElementById("btnCloseSidebar");
+
+    openBtn.onclick = () => { sidebar.classList.add("open"); overlay.classList.remove("hidden"); };
+    closeBtn.onclick = () => { sidebar.classList.remove("open"); overlay.classList.add("hidden"); };
+    overlay.onclick = () => { sidebar.classList.remove("open"); overlay.classList.add("hidden"); };
+
+    // default show on desktop
+    if (window.innerWidth >= 1024) { sidebar.classList.add("open"); }
+  })();
+
+  // ===== INIT =====
+  document.addEventListener("DOMContentLoaded", async () => {
+    // Load user info first
+    await fetchCurrentUser();
+    
+    // Load events
+    await fetchEvents();
+    
+    // Logout handler
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('auth_token_user');
+        location.href = '/login';
+      });
+    }
+  });
+</script>
+<script src="/js/theme.js"></script>
+<script src="/js/navigation.js"></script>
+<script>
+  // ✅ LanguageService tự động init - KHÔNG cần gọi thủ công
+  document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Lucide icons
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  });
+  
+  // Re-apply translations and icons when language changes
+  window.addEventListener('language-changed', (event) => {
+    console.log('Language changed to:', event.detail.language);
+    
+    // Update dropdown placeholder when language changes
+    const selEvent = document.getElementById('selEvent');
+    if (selEvent && selEvent.options.length > 0) {
+      const placeholder = window.LanguageService 
+        ? window.LanguageService.translate('selectEventPlaceholder', 'attendance')
+        : '-- Chọn sự kiện --';
+      selEvent.options[0].textContent = placeholder;
+    }
+    
+    // Re-render table để cập nhật status text
+    if (selEvent && selEvent.value) {
+      render();
+    }
+    
+    // Update button titles
+    const btnPresent = document.querySelectorAll('[data-act="present"]');
+    const btnLate = document.querySelectorAll('[data-act="late"]');
+    const btnAbsent = document.querySelectorAll('[data-act="absent"]');
+    
+    btnPresent.forEach(btn => {
+      btn.title = window.LanguageService ? window.LanguageService.translate('present', 'attendance') : 'Có mặt';
+    });
+    btnLate.forEach(btn => {
+      btn.title = window.LanguageService ? window.LanguageService.translate('late', 'attendance') : 'Đi muộn';
+    });
+    btnAbsent.forEach(btn => {
+      btn.title = window.LanguageService ? window.LanguageService.translate('absent', 'attendance') : 'Vắng mặt';
+    });
+    
+    if (window.lucide) {
+      lucide.createIcons();
+    }
+  });
+  
+  // ==== NOTIFICATION SYSTEM ====
+  const HeaderComponent = {
+    notificationBadge: document.getElementById('notificationBadge'),
+    notificationDropdown: document.getElementById('notificationDropdown'),
+    notificationList: document.getElementById('notificationList'),
+    btnNotifications: document.getElementById('btnNotifications'),
+    btnMarkAllRead: document.getElementById('btnMarkAllRead'),
+    btnClearAllRead: document.getElementById('btnClearAllRead'),
+    
+    async updateNotificationBadge() {
+      try {
+        const userId = globalCurrentUser?.user_id || globalCurrentUser?.id;
+        if (!userId) return;
+        
+        const count = await NotificationService.getUnreadCount(userId);
+        if (count > 0) {
+          this.notificationBadge.textContent = count > 99 ? '99+' : count;
+          this.notificationBadge.classList.remove('hidden');
+        } else {
+          this.notificationBadge.classList.add('hidden');
+        }
+      } catch (error) {
+        console.error('Error updating notification badge:', error);
+      }
+    },
+    
+    async renderNotifications() {
+      try {
+        const userId = globalCurrentUser?.user_id || globalCurrentUser?.id;
+        if (!userId) return;
+        
+        const notifications = await NotificationService.getNotifications(userId, 10);
+        
+        if (!notifications || notifications.length === 0) {
+          this.notificationList.innerHTML = `
+            <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+              <i data-lucide="bell-off" class="w-12 h-12 mx-auto mb-2 text-gray-400"></i>
+              <p>Không có thông báo</p>
+            </div>`;
+          lucide.createIcons();
+          return;
+        }
+        
+        this.notificationList.innerHTML = notifications.map(n => {
+          const isUnread = !n.is_read;
+          const timeAgo = this.getTimeAgo(n.created_at);
+          
+          let iconName = 'bell';
+          let iconColor = 'text-blue-500';
+          if (n.type === 'registration_confirmed') {
+            iconName = 'check-circle';
+            iconColor = 'text-green-500';
+          } else if (n.type === 'event_reminder') {
+            iconName = 'clock';
+            iconColor = 'text-orange-500';
+          } else if (n.type === 'event_completed') {
+            iconName = 'calendar-check';
+            iconColor = 'text-purple-500';
+          } else if (n.type === 'event_cancelled') {
+            iconName = 'x-circle';
+            iconColor = 'text-red-500';
+          }
+          
+          return `
+            <div class="notification-item p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors ${isUnread ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" 
+                 data-notification-id="${n.notification_id}">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                  <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">${n.title}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${n.message}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${timeAgo}</p>
+                </div>
+                ${isUnread ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-blue-500 rounded-full"></div></div>' : ''}
+              </div>
+            </div>`;
+        }).join('');
+        
+        lucide.createIcons();
+        
+        document.querySelectorAll('.notification-item').forEach(item => {
+          item.addEventListener('click', () => this.handleNotificationClick(item));
+        });
+      } catch (error) {
+        console.error('Error rendering notifications:', error);
+        this.notificationList.innerHTML = `
+          <div class="p-4 text-center text-red-500">
+            <p>Lỗi tải thông báo</p>
+          </div>`;
+      }
+    },
+    
+    async handleNotificationClick(item) {
+      const notificationId = item.dataset.notificationId;
+      try {
+        await NotificationService.markAsRead(notificationId);
+        await this.updateNotificationBadge();
+        await this.renderNotifications();
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    },
+    
+    toggleNotificationDropdown() {
+      const isHidden = this.notificationDropdown.classList.contains('hidden');
+      if (isHidden) {
+        this.notificationDropdown.classList.remove('hidden');
+        this.renderNotifications();
+      } else {
+        this.notificationDropdown.classList.add('hidden');
+      }
+    },
+    
+    getTimeAgo(timestamp) {
+      const now = new Date();
+      const time = new Date(timestamp);
+      const diffInSeconds = Math.floor((now - time) / 1000);
+      
+      if (diffInSeconds < 60) return 'Vừa xong';
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} phút trước`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} giờ trước`;
+      if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} ngày trước`;
+      return time.toLocaleDateString('vi-VN');
+    },
+    
+    init(userId) {
+      if (!userId) return;
+      
+      this.btnNotifications?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleNotificationDropdown();
+      });
+      
+      this.btnMarkAllRead?.addEventListener('click', async () => {
+        try {
+          await NotificationService.markAllAsRead(userId);
+          await this.updateNotificationBadge();
+          await this.renderNotifications();
+        } catch (error) {
+          console.error('Error marking all as read:', error);
+        }
+      });
+      
+      this.btnClearAllRead?.addEventListener('click', async () => {
+        try {
+          await NotificationService.clearReadNotifications(userId);
+          await this.updateNotificationBadge();
+          await this.renderNotifications();
+        } catch (error) {
+          console.error('Error clearing read notifications:', error);
+        }
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!this.notificationDropdown.contains(e.target) && 
+            !this.btnNotifications.contains(e.target)) {
+          this.notificationDropdown.classList.add('hidden');
+        }
+      });
+      
+      this.updateNotificationBadge();
+      
+      setInterval(() => {
+        if (!this.notificationDropdown.classList.contains('hidden')) {
+          this.renderNotifications();
+        }
+        this.updateNotificationBadge();
+      }, 30000);
+    }
+  };
+  
+  // Initialize notification system
+  document.addEventListener('DOMContentLoaded', () => {
+    // Wait for user to be loaded then init notifications
+    setTimeout(() => {
+      if (globalCurrentUser && typeof NotificationService !== 'undefined') {
+        HeaderComponent.init(globalCurrentUser.user_id || globalCurrentUser.id);
+      }
+    }, 500);
+  });
+</script>
+<script src="/js/notifications.js"></script>
+</body>
+</html>

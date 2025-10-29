@@ -1,0 +1,346 @@
+﻿<!-- 
+  ========================================
+  HEADER COMPONENT - Chuẩn cho tất cả trang
+  ========================================
+  Copy đoạn này vào tất cả các file HTML
+  
+  Features:
+  - Responsive menu button (mobile)
+  - Page title & subtitle
+  - 4 action icons: Search, Messages, Profile, Notifications
+  - Dark mode support
+  - Multi-language support
+-->
+
+<header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+  <div class="flex items-center justify-between">
+    <!-- Left: Menu button + Title -->
+    <div class="flex items-center space-x-4">
+      <button id="btnOpenSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Mở menu">
+        <i data-lucide="menu" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+      </button>
+      <div>
+        <h1 id="pageTitle" class="text-xl font-semibold text-gray-900 dark:text-white">
+          <!-- Page title will be set by JavaScript -->
+        </h1>
+        <p id="pageSubtitle" class="text-sm text-gray-500 dark:text-gray-400">
+          <!-- Page subtitle will be set by JavaScript -->
+        </p>
+      </div>
+    </div>
+
+    <!-- Right: Action Icons -->
+    <div class="flex items-center space-x-3">
+      <!-- Search Button (optional - show on specific pages) -->
+      <button id="btnHeaderSearch" 
+              class="hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+              aria-label="Tìm kiếm"
+              title="Tìm kiếm">
+        <i data-lucide="search" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+      </button>
+
+      <!-- Messages Button -->
+      <a href="/MessagingSystem.html" 
+         class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+         aria-label="Tin nhắn"
+         title="Tin nhắn">
+        <i data-lucide="message-circle" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+        <!-- Unread message badge -->
+        <span id="messageBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+          3
+        </span>
+      </a>
+
+      <!-- Profile Button -->
+      <a href="/UserProfile.html" 
+         class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+         aria-label="Tài khoản"
+         title="Tài khoản">
+        <i data-lucide="user" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+      </a>
+
+      <!-- Notifications Button -->
+      <button id="btnNotifications" 
+              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+              aria-label="Thông báo"
+              title="Thông báo">
+        <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+        <!-- Unread notification badge -->
+        <span id="notificationBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+          5
+        </span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Notification Dropdown (hidden by default) -->
+<div id="notificationDropdown" class="hidden fixed top-16 right-6 w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 max-h-[600px] overflow-hidden">
+  <!-- Dropdown Header -->
+  <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+    <h3 class="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
+    <button id="btnMarkAllRead" class="text-sm text-blue-600 hover:text-blue-700">
+      Đánh dấu tất cả đã đọc
+    </button>
+  </div>
+
+  <!-- Notification List -->
+  <div id="notificationList" class="overflow-y-auto max-h-[450px]">
+    <!-- Notifications will be rendered here by JavaScript -->
+    <div class="p-8 text-center text-gray-500">
+      Không có thông báo
+    </div>
+  </div>
+
+  <!-- Dropdown Footer -->
+  <div class="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+    <button id="btnClearAllRead" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+      Xóa tất cả đã đọc
+    </button>
+    <a href="/notifications" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+      Xem tất cả
+    </a>
+  </div>
+</div>
+
+<script>
+// ========================================
+// HEADER COMPONENT LOGIC
+// ========================================
+(function() {
+  'use strict';
+
+  // Set page title and subtitle
+  function setPageInfo(title, subtitle) {
+    const titleEl = document.getElementById('pageTitle');
+    const subtitleEl = document.getElementById('pageSubtitle');
+    
+    if (titleEl) titleEl.textContent = title;
+    if (subtitleEl) subtitleEl.textContent = subtitle;
+  }
+
+  // Toggle notification dropdown
+  const btnNotifications = document.getElementById('btnNotifications');
+  const notificationDropdown = document.getElementById('notificationDropdown');
+  
+  if (btnNotifications && notificationDropdown) {
+    btnNotifications.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notificationDropdown.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!notificationDropdown.contains(e.target) && !btnNotifications.contains(e.target)) {
+        notificationDropdown.classList.add('hidden');
+      }
+    });
+  }
+
+  // Update notification badge
+  async function updateNotificationBadge() {
+    if (typeof NotificationService === 'undefined') return;
+    
+    try {
+      const count = await NotificationService.getUnreadCount();
+      const badge = document.getElementById('notificationBadge');
+      
+      if (badge) {
+        if (count > 0) {
+          badge.textContent = count > 9 ? '9+' : count;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating notification badge:', error);
+    }
+  }
+
+  // Update message badge (mock data - replace with real API)
+  function updateMessageBadge() {
+    const badge = document.getElementById('messageBadge');
+    // TODO: Replace with real unread message count from API
+    const unreadCount = 0; // Example
+    
+    if (badge) {
+      if (unreadCount > 0) {
+        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+  }
+
+  // Render notifications in dropdown
+  async function renderNotifications() {
+    if (typeof NotificationService === 'undefined') return;
+    
+    const list = document.getElementById('notificationList');
+    if (!list) return;
+
+    try {
+      const notifications = NotificationService.getUserNotifications();
+      
+      if (notifications.length === 0) {
+        list.innerHTML = `
+          <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+            Không có thông báo
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = notifications.slice(0, 5).map(notif => {
+        const icon = NotificationService._getNotificationIcon(notif.type);
+        const color = NotificationService._getNotificationColor(notif.type);
+        const timeAgo = formatTimeAgo(notif.createdAt);
+        
+        return `
+          <div class="notification-item p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 cursor-pointer ${notif.isRead ? 'opacity-60' : ''}"
+               onclick="handleNotificationClick(${notif.id})">
+            <div class="flex items-start space-x-3">
+              <div class="text-2xl">${icon}</div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                  ${notif.title}
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                  ${notif.message}
+                </p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  ${timeAgo}
+                </p>
+              </div>
+              ${!notif.isRead ? '<div class="w-2 h-2 bg-blue-500 rounded-full"></div>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error('Error rendering notifications:', error);
+    }
+  }
+
+  // Handle notification click
+  window.handleNotificationClick = async function(notificationId) {
+    if (typeof NotificationService === 'undefined') return;
+    
+    await NotificationService.markAsRead(notificationId);
+    await renderNotifications();
+    await updateNotificationBadge();
+    
+    // Close dropdown
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+  };
+
+  // Mark all as read
+  const btnMarkAllRead = document.getElementById('btnMarkAllRead');
+  if (btnMarkAllRead) {
+    btnMarkAllRead.addEventListener('click', async () => {
+      if (typeof NotificationService === 'undefined') return;
+      
+      await NotificationService.markAllAsRead();
+      await renderNotifications();
+      await updateNotificationBadge();
+    });
+  }
+
+  // Clear all read
+  const btnClearAllRead = document.getElementById('btnClearAllRead');
+  if (btnClearAllRead) {
+    btnClearAllRead.addEventListener('click', async () => {
+      if (typeof NotificationService === 'undefined') return;
+      
+      await NotificationService.clearAllRead();
+      await renderNotifications();
+      await updateNotificationBadge();
+    });
+  }
+
+  // Format time ago
+  function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffMs = now - time;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Vừa xong';
+    if (diffMins < 60) return `${diffMins} phút trước`;
+    if (diffHours < 24) return `${diffHours} giờ trước`;
+    return `${diffDays} ngày trước`;
+  }
+
+  // Listen to notification updates
+  document.addEventListener('notifications-updated', () => {
+    updateNotificationBadge();
+    renderNotifications();
+  });
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    updateNotificationBadge();
+    updateMessageBadge();
+    renderNotifications();
+
+    // Update periodically
+    setInterval(updateNotificationBadge, 30000); // Every 30 seconds
+    setInterval(updateMessageBadge, 60000); // Every 60 seconds
+  });
+
+  // Export for external use
+  window.HeaderComponent = {
+    setPageInfo,
+    updateNotificationBadge,
+    updateMessageBadge,
+    renderNotifications
+  };
+})();
+</script>
+
+<style>
+/* Notification dropdown animation */
+#notificationDropdown {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Notification item hover effect */
+.notification-item {
+  transition: all 0.2s ease;
+}
+
+.notification-item:hover {
+  transform: translateX(4px);
+}
+
+/* Badge pulse animation */
+#notificationBadge, #messageBadge {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+</style>

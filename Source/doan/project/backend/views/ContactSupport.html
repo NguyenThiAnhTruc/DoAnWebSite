@@ -1,0 +1,799 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard + Liên hệ hỗ trợ</title>
+
+  <!-- Tailwind + Lucide -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  
+  <style>
+    /* Mobile: hide sidebar by translating left; open() will bring it into view */
+    .sidebar{transform:translateX(-300px);transition:transform .3s ease}
+    .sidebar.open{transform:translateX(0)}
+    .overlay{background:rgba(0,0,0,.5)}
+    .active-btn{background-image:linear-gradient(to right, #3b82f6, #9333ea); color:white; box-shadow:0 10px 15px -3px rgba(59,130,246,.2),0 4px 6px -4px rgba(147,51,234,.2);}
+
+    /* On large screens (lg and up) keep the sidebar visible and disable overlay */
+    @media (min-width: 1024px) {
+      .sidebar { transform: translateX(0) !important; }
+      .overlay { display: none !important; }
+    }
+
+    .pop { opacity:0; transform:translateY(8px); }
+    .pop.show { opacity:1; transform:translateY(0); transition:.25s ease; }
+  </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900">
+<div id="app" class="min-h-screen flex">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl lg:shadow-none">
+    <div class="flex flex-col h-full">
+      <!-- Brand -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-10 h-10 object-contain rounded-full">
+          <span class="text-lg font-bold text-gray-900 dark:text-white">SchoolEvents</span>
+        </div>
+        <button id="btnCloseSidebar" class="lg:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Đóng menu">
+          <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- User -->
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <i data-lucide="user" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h3 id="sidebarUserName" class="font-semibold text-gray-900">Khách</h3>
+            <p id="sidebarUserRole" class="text-sm text-gray-500">Student</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="p-6 border-b border-gray-200">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 rounded-lg p-3 text-center">
+            <div id="upcomingCount" class="text-2xl font-bold text-blue-600">0</div>
+            <div class="text-xs text-blue-600">Sự kiện sắp tới</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-3 text-center">
+            <div id="joinedCount" class="text-2xl font-bold text-purple-600">0</div>
+            <div class="text-xs text-purple-600">Đã tham gia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu -->
+      <nav id="menu" class="flex-1 p-4 space-y-2" aria-label="Menu chức năng">
+        <!-- populated by /public/js/navigation.js -->
+      </nav>
+
+      <div class="p-4 border-t border-gray-200">
+        <button id="btnLogout" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl">
+          <i data-lucide="log-out" class="w-5 h-5"></i><span class="font-medium">Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay (mobile) -->
+  <div id="overlay" class="overlay fixed inset-0 z-40 lg:hidden hidden"></div>
+
+  <!-- Right pane -->
+  <main class="flex-1 flex flex-col">
+    <!-- Header Component -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Left: Menu button + Title -->
+        <div class="flex items-center space-x-4">
+          <button id="btnOpenSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Mở menu">
+            <i data-lucide="menu" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <div>
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Liên hệ hỗ trợ</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7</p>
+          </div>
+        </div>
+
+        <!-- Right: Action Icons -->
+        <div class="flex items-center space-x-3">
+          <!-- Messages Button -->
+          <a href="/MessagingSystem.html" 
+             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+             aria-label="Tin nhắn"
+             title="Tin nhắn">
+            <i data-lucide="message-circle" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="messageBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">3</span>
+          </a>
+
+          <!-- Profile Button -->
+          <a href="/UserProfile.html" 
+             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+             aria-label="Tài khoản"
+             title="Tài khoản">
+            <i data-lucide="user" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </a>
+
+          <!-- Notifications Button -->
+          <button id="btnNotifications" 
+                  class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+                  aria-label="Thông báo"
+                  title="Thông báo">
+            <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="notificationBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">5</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section id="contentRoot" class="flex-1 overflow-auto p-6">
+      <div class="max-w-7xl mx-auto">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-gray-900">Liên hệ hỗ trợ</h2>
+          <p class="text-gray-600">Chúng tôi luôn sẵn sàng hỗ trợ bạn 24/7</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Thông tin liên hệ -->
+          <aside class="lg:col-span-4 space-y-4">
+            <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Thông tin liên hệ</h3>
+              <div id="contactList" class="space-y-4"></div>
+            </section>
+
+            <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+              <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Câu hỏi thường gặp</h3>
+              <div id="faqList" class="space-y-3"></div>
+            </section>
+          </aside>
+
+          <!-- Khung chat hỗ trợ -->
+          <section class="lg:col-span-8">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col" style="height: 700px;">
+              <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4 text-white">
+                <div class="flex items-center space-x-3">
+                  <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold">Hỗ trợ trực tuyến</h3>
+                    <p class="text-blue-100 text-sm">
+                      <span class="w-2 h-2 bg-green-400 rounded-full inline-block mr-1"></span>Đang hoạt động
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div id="msgList" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900"></div>
+
+              <div class="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
+                <div class="flex space-x-3">
+                  <textarea id="msgInput" rows="2" placeholder="Nhập tin nhắn của bạn..."
+                            class="flex-1 resize-none border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"></textarea>
+                  <button id="btnSend" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl hover:shadow-lg">
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+  <script>
+    const contactInfo = [
+      { icon:'phone', label:'Điện thoại', value:'(024) 1234-5678', description:'Thứ 2 - Thứ 6: 8:00 - 17:00' },
+      { icon:'mail',  label:'Email', value:'support@schoolevents.edu', description:'Phản hồi trong vòng 24h' },
+      { icon:'map-pin', label:'Địa chỉ', value:'123 Đường ABC, Hà Nội', description:'Tầng 2, Tòa nhà chính' },
+    ];
+
+    const faqItems = [
+      { q:'Làm thế nào để đăng ký sự kiện?', a:'Vào trang chi tiết sự kiện và nhấn "Đăng ký tham gia".' },
+      { q:'Có thể hủy đăng ký sự kiện không?', a:'Bạn có thể hủy trong "Sự kiện của tôi" hoặc liên hệ ban tổ chức.' },
+      { q:'Làm sao nhận thông báo sự kiện mới?', a:'Bật thông báo trong phần Cài đặt.' },
+      { q:'Quên mật khẩu, khôi phục thế nào?', a:'Dùng chức năng "Quên mật khẩu" trên trang đăng nhập.' },
+    ];
+
+    const messages = [
+      { sender:'admin', content:'Xin chào! Chúng tôi có thể giúp gì cho bạn?', time:'09:00' },
+      { sender:'user', content:'Tôi cần hỗ trợ về đăng ký sự kiện.', time:'09:05' },
+      { sender:'admin', content:'Bạn có thể nhấn “Đăng ký tham gia” trong trang sự kiện.', time:'09:07' },
+    ];
+
+    function renderContacts() {
+      const wrap = document.getElementById('contactList');
+      contactInfo.forEach((c, i) => {
+        const el = document.createElement('div');
+        el.className = 'flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl pop';
+        el.innerHTML = `
+          <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+            <i data-lucide="${c.icon}" class="w-5 h-5 text-blue-600 dark:text-blue-400"></i>
+          </div>
+          <div>
+            <div class="font-medium text-gray-900 dark:text-white">${c.label}</div>
+            <div class="text-blue-600 dark:text-blue-400 font-medium">${c.value}</div>
+            <div class="text-sm text-gray-600 dark:text-gray-400">${c.description}</div>
+          </div>
+        `;
+        wrap.appendChild(el);
+        setTimeout(()=>el.classList.add('show'), 80*i);
+      });
+    }
+
+    function renderFAQ() {
+      const wrap = document.getElementById('faqList');
+      faqItems.forEach(f=>{
+        const det=document.createElement('details');
+        det.className='group';
+        det.innerHTML=`<summary class="cursor-pointer font-medium text-gray-900 dark:text-white py-2 border-b border-gray-200 dark:border-gray-700 group-open:text-blue-600 dark:group-open:text-blue-400">${f.q}</summary>
+                       <p class="text-gray-600 dark:text-gray-400 text-sm mt-2 pb-2">${f.a}</p>`;
+        wrap.appendChild(det);
+      });
+    }
+
+    function renderMessages() {
+      const msgList=document.getElementById('msgList');
+      msgList.innerHTML='';
+      messages.forEach((m, index)=>{
+        const own = m.sender==='user';
+        const div=document.createElement('div');
+        div.className=`flex ${own?'justify-end':'justify-start'} pop`;
+        
+        // Escape HTML and preserve line breaks
+        const escapedContent = escapeHtml(m.content).replace(/\n/g, '<br>');
+        
+        // Show bot icon for chatbot messages
+        const icon = m.isBot ? '🤖' : '<i data-lucide="user" class="w-4 h-4 text-gray-600 dark:text-gray-300"></i>';
+        
+        div.innerHTML=`
+          <div class="flex items-end space-x-2 max-w-xs ${own?'flex-row-reverse space-x-reverse':''}">
+            ${own?'':`<div class="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-lg">
+                        ${icon}</div>`}
+            <div class="px-4 py-2 rounded-2xl ${own?'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-br-sm':'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-sm'}">
+              <p class="text-sm whitespace-pre-wrap">${escapedContent}</p>
+              <div class="flex items-center justify-end mt-1 text-xs ${own?'text-blue-100':'text-gray-500 dark:text-gray-400'}">${m.time}</div>
+            </div>
+          </div>`;
+        msgList.appendChild(div);
+        setTimeout(()=>div.classList.add('show'), 50 * index);
+      });
+      lucide.createIcons();
+      
+      // Scroll to bottom
+      msgList.scrollTop = msgList.scrollHeight;
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Chat functionality with real API and chatbot
+    let conversationId = null;
+    let currentUser = null;
+
+    // Helper function to get auth headers
+    function getAuthHeaders() {
+      const token = localStorage.getItem('token');
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+    }
+
+    async function initializeChat() {
+      try {
+        // Get user from localStorage
+        currentUser = JSON.parse(localStorage.getItem('user'));
+        if (!currentUser || !currentUser.user_id) {
+          console.error('User not logged in');
+          return;
+        }
+        
+        console.log('🔍 Initializing chat for user:', currentUser);
+
+        // Get or create conversation with support (chatbot user_id = 0)
+        const conversationsResponse = await fetch('/api/messages/conversations', {
+          headers: getAuthHeaders()
+        });
+        
+        if (!conversationsResponse.ok) {
+          console.error('❌ Failed to get conversations:', conversationsResponse.status);
+          throw new Error(`HTTP ${conversationsResponse.status}`);
+        }
+        
+        const conversations = await conversationsResponse.json();
+        console.log('📋 Existing conversations:', conversations);
+        
+        // Check if response is an array
+        if (!Array.isArray(conversations)) {
+          console.error('❌ Conversations is not an array:', conversations);
+          throw new Error('Invalid response format');
+        }
+        
+        // Find existing conversation with chatbot
+        const chatbotConversation = conversations.find(c => 
+          c.other_participants && c.other_participants.some(p => p.name === 'Chatbot')
+        );
+
+        if (chatbotConversation) {
+          conversationId = chatbotConversation.conversation_id;
+          console.log('✅ Found existing conversation:', conversationId);
+          await loadMessages();
+        } else {
+          console.log('🆕 Creating new conversation with chatbot...');
+          
+          // Create new conversation with chatbot
+          const createResponse = await fetch('/api/messages/conversations', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              participantIds: [0], // Chatbot user_id
+              title: 'Hỗ trợ khách hàng'
+            })
+          });
+          
+          if (!createResponse.ok) {
+            console.error('Failed to create conversation:', createResponse.status);
+            throw new Error('Cannot create conversation');
+          }
+          
+          const data = await createResponse.json();
+          conversationId = data.conversation_id;
+          console.log('✅ Created conversation:', conversationId);
+          
+          // Show welcome message
+          messages.length = 0;
+          messages.push({
+            sender: 'admin',
+            content: '🤖 Xin chào! Tôi là chatbot hỗ trợ tự động. Tôi có thể giúp bạn với các câu hỏi về:\n• Đăng ký sự kiện\n• Hủy đăng ký\n• Điểm danh\n• Thông báo\n• Quên mật khẩu\n\nHãy hỏi tôi bất cứ điều gì!',
+            time: 'Bây giờ',
+            isBot: true
+          });
+          renderMessages();
+        }
+      } catch (error) {
+        console.error('❌ Error initializing chat:', error);
+        // Show error in chat
+        messages.length = 0;
+        messages.push({
+          sender: 'admin',
+          content: '⚠️ Không thể kết nối với hệ thống chat. Vui lòng thử lại sau.',
+          time: 'Bây giờ',
+          isBot: true
+        });
+        renderMessages();
+      }
+    }
+
+    async function loadMessages() {
+      if (!conversationId) return;
+
+      try {
+        const response = await fetch(`/api/messages/conversations/${conversationId}/messages`, {
+          headers: getAuthHeaders()
+        });
+        
+        if (!response.ok) {
+          console.error('❌ Failed to load messages:', response.status);
+          return;
+        }
+        
+        const messagesData = await response.json();
+        
+        messages.length = 0;
+        messagesData.forEach(msg => {
+          messages.push({
+            sender: msg.sender_id === currentUser.user_id ? 'user' : 'admin',
+            content: msg.content,
+            time: formatTime(msg.sent_at),
+            isBot: msg.sender_id === 0 // Mark chatbot messages
+          });
+        });
+        
+        renderMessages();
+        
+        // Scroll to bottom
+        const msgList = document.getElementById('msgList');
+        msgList.scrollTop = msgList.scrollHeight;
+      } catch (error) {
+        console.error('Error loading messages:', error);
+      }
+    }
+
+    function formatTime(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    async function sendMessage(text) {
+      if (!conversationId || !text) return;
+
+      try {
+        // Send message via API
+        const response = await fetch(`/api/messages/conversations/${conversationId}/messages`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ content: text })
+        });
+
+        if (response.ok) {
+          const message = await response.json();
+          
+          // Add user message to UI immediately
+          messages.push({
+            sender: 'user',
+            content: text,
+            time: formatTime(message.sent_at || new Date().toISOString()),
+            isBot: false
+          });
+          renderMessages();
+
+          // Poll for chatbot response (it responds asynchronously)
+          // Try multiple times in case chatbot is slow
+          let attempts = 0;
+          const maxAttempts = 5;
+          const pollInterval = setInterval(async () => {
+            attempts++;
+            const beforeCount = messages.length;
+            await loadMessages();
+            const afterCount = messages.length;
+            
+            // Stop polling if new message arrived or max attempts reached
+            if (afterCount > beforeCount || attempts >= maxAttempts) {
+              clearInterval(pollInterval);
+            }
+          }, 800);
+        } else {
+          console.error('Failed to send message:', response.status);
+          alert('Không thể gửi tin nhắn. Vui lòng thử lại!');
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        alert('Không thể gửi tin nhắn. Vui lòng thử lại!');
+      }
+    }
+
+    document.getElementById('btnSend').onclick = async ()=>{
+      const input=document.getElementById('msgInput');
+      const text=input.value.trim();
+      if(!text)return;
+      
+      input.value='';
+      await sendMessage(text);
+    };
+
+    // Send on Enter (Shift+Enter for new line)
+    document.getElementById('msgInput').addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const input = e.target;
+        const text = input.value.trim();
+        if (text) {
+          input.value = '';
+          await sendMessage(text);
+        }
+      }
+    });
+
+    renderContacts();
+    renderFAQ();
+    renderMessages();
+    lucide.createIcons();
+    
+    // Initialize chat with real API
+    initializeChat();
+  </script>
+
+  <!-- Notification Dropdown Panel -->
+  <div id="notificationDropdown" class="hidden fixed top-16 right-6 w-96 max-w-[calc(100vw-3rem)] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 animate-slideDown">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <h3 class="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
+      <button id="btnMarkAllRead" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+        Đánh dấu đã đọc
+      </button>
+    </div>
+
+    <!-- Notification List -->
+    <div id="notificationList" class="overflow-y-auto max-h-96 divide-y divide-gray-100 dark:divide-gray-700">
+      <!-- Notifications will be rendered here -->
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <button id="btnClearAllRead" class="text-xs text-red-600 dark:text-red-400 hover:underline">
+        Xóa đã đọc
+      </button>
+      <a href="/NotificationList.html" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+        Xem tất cả
+      </a>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    const overlay = document.getElementById('overlay');
+    const sidebar = document.getElementById('sidebar');
+    const btnOpenSidebar = document.getElementById('btnOpenSidebar');
+    const btnCloseSidebar = document.getElementById('btnCloseSidebar');
+    function openSidebar(){ sidebar.classList.add('open'); overlay.classList.remove('hidden'); }
+    function closeSidebar(){ sidebar.classList.remove('open'); overlay.classList.add('hidden'); }
+    btnOpenSidebar && btnOpenSidebar.addEventListener('click', openSidebar);
+    btnCloseSidebar && btnCloseSidebar.addEventListener('click', closeSidebar);
+    overlay && overlay.addEventListener('click', closeSidebar);
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+  })();
+  </script>
+
+  <!-- Header Component JavaScript -->
+  <script>
+    const HeaderComponent = {
+      // Update notification badge
+      updateNotificationBadge: async function() {
+        try {
+          const count = await window.NotificationService.getUnreadCount();
+          const badge = document.getElementById('notificationBadge');
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        } catch (error) {
+          console.error('Failed to update notification badge:', error);
+        }
+      },
+
+      // Update message badge (mock for now, replace with real API)
+      updateMessageBadge: async function() {
+        try {
+          // TODO: Replace with real message API
+          const count = 3; // Mock data
+          const badge = document.getElementById('messageBadge');
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        } catch (error) {
+          console.error('Failed to update message badge:', error);
+        }
+      },
+
+      // Render notifications in dropdown
+      renderNotifications: async function() {
+        try {
+          const notifications = await window.NotificationService.fetchNotifications(5, false);
+          const container = document.getElementById('notificationList');
+          
+          if (!notifications || notifications.length === 0) {
+            container.innerHTML = `
+              <div class="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                Không có thông báo mới
+              </div>
+            `;
+            if (window.LanguageService) window.LanguageService._updatePageContent();
+            return;
+          }
+
+          container.innerHTML = notifications.map(notif => {
+            const icon = this._getNotificationIcon(notif.type);
+            const color = this._getNotificationColor(notif.type);
+            const timeAgo = this._formatTimeAgo(notif.created_at);
+            const isUnread = !notif.is_read;
+
+            return `
+              <div class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${isUnread ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" 
+                   data-notification-id="${notif.notification_id}"
+                   onclick="HeaderComponent.handleNotificationClick(${notif.notification_id})">
+                <div class="flex items-start space-x-3">
+                  <div class="flex-shrink-0 w-10 h-10 rounded-full ${color} flex items-center justify-center">
+                    <i data-lucide="${icon}" class="w-5 h-5 text-white"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">${notif.title}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">${notif.message}</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">${timeAgo}</p>
+                  </div>
+                  ${isUnread ? '<div class="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full"></div>' : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+        } catch (error) {
+          console.error('Failed to render notifications:', error);
+        }
+      },
+
+      // Handle notification click
+      handleNotificationClick: async function(notificationId) {
+        try {
+          await window.NotificationService.markAsRead(notificationId);
+          await this.updateNotificationBadge();
+          await this.renderNotifications();
+          this.closeNotificationDropdown();
+        } catch (error) {
+          console.error('Failed to handle notification click:', error);
+        }
+      },
+
+      // Toggle notification dropdown
+      toggleNotificationDropdown: function() {
+        const dropdown = document.getElementById('notificationDropdown');
+        const isHidden = dropdown.classList.contains('hidden');
+        
+        if (isHidden) {
+          dropdown.classList.remove('hidden');
+          this.renderNotifications();
+        } else {
+          dropdown.classList.add('hidden');
+        }
+      },
+
+      closeNotificationDropdown: function() {
+        document.getElementById('notificationDropdown').classList.add('hidden');
+      },
+
+      // Get icon for notification type
+      _getNotificationIcon: function(type) {
+        const icons = {
+          event_created: 'calendar-plus',
+          event_updated: 'calendar-clock',
+          event_cancelled: 'calendar-x',
+          registration_confirmed: 'check-circle',
+          registration_cancelled: 'x-circle',
+          event_reminder: 'bell',
+          attendance_marked: 'check-square',
+          message_received: 'message-circle',
+          announcement: 'megaphone',
+          system: 'info'
+        };
+        return icons[type] || 'bell';
+      },
+
+      // Get color for notification type
+      _getNotificationColor: function(type) {
+        const colors = {
+          event_created: 'bg-green-500',
+          event_updated: 'bg-blue-500',
+          event_cancelled: 'bg-red-500',
+          registration_confirmed: 'bg-green-500',
+          registration_cancelled: 'bg-red-500',
+          event_reminder: 'bg-yellow-500',
+          attendance_marked: 'bg-green-500',
+          message_received: 'bg-blue-500',
+          announcement: 'bg-purple-500',
+          system: 'bg-gray-500'
+        };
+        return colors[type] || 'bg-gray-500';
+      },
+
+      // Format time ago in Vietnamese
+      _formatTimeAgo: function(timestamp) {
+        const now = Date.now();
+        const time = new Date(timestamp).getTime();
+        const diff = Math.floor((now - time) / 1000); // seconds
+
+        if (diff < 60) return 'Vừa xong';
+        if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+        return new Date(timestamp).toLocaleDateString('vi-VN');
+      },
+
+      // Initialize header component
+      init: function() {
+        // Notification button click
+        const btnNotifications = document.getElementById('btnNotifications');
+        if (btnNotifications) {
+          btnNotifications.addEventListener('click', () => this.toggleNotificationDropdown());
+        }
+
+        // Mark all as read button
+        const btnMarkAllRead = document.getElementById('btnMarkAllRead');
+        if (btnMarkAllRead) {
+          btnMarkAllRead.addEventListener('click', async () => {
+            try {
+              await window.NotificationService.markAllAsRead();
+              await this.updateNotificationBadge();
+              await this.renderNotifications();
+            } catch (error) {
+              console.error('Failed to mark all as read:', error);
+            }
+          });
+        }
+
+        // Clear all read button
+        const btnClearAllRead = document.getElementById('btnClearAllRead');
+        if (btnClearAllRead) {
+          btnClearAllRead.addEventListener('click', async () => {
+            try {
+              await window.NotificationService.clearAllRead();
+              await this.updateNotificationBadge();
+              await this.renderNotifications();
+            } catch (error) {
+              console.error('Failed to clear all read:', error);
+            }
+          });
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+          const dropdown = document.getElementById('notificationDropdown');
+          const btn = document.getElementById('btnNotifications');
+          if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+            this.closeNotificationDropdown();
+          }
+        });
+
+        // Update badges periodically
+        this.updateNotificationBadge();
+        this.updateMessageBadge();
+        setInterval(() => this.updateNotificationBadge(), 30000); // Every 30s
+        setInterval(() => this.updateMessageBadge(), 60000); // Every 60s
+
+        // Listen for notification updates
+        window.addEventListener('notifications-updated', () => {
+          this.updateNotificationBadge();
+        });
+      }
+    };
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => HeaderComponent.init());
+    } else {
+      HeaderComponent.init();
+    }
+  </script>
+
+  <style>
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-slideDown {
+      animation: slideDown 0.2s ease-out;
+    }
+    #notificationBadge.hidden,
+    #messageBadge.hidden {
+      display: none;
+    }
+    #notificationBadge:not(.hidden),
+    #messageBadge:not(.hidden) {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+
+  <script src="/js/navigation.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+<!-- This file will be replaced with actual logo image -->
+<!-- Using logo-dai-hoc-da-lat.jpg from public/images folder -->

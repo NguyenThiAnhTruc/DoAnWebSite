@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Điểm danh QR</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="/js/theme.js"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">
+      <i data-lucide="qr-code" class="w-8 h-8 inline"></i>
+      Tạo Mã QR Điểm Danh
+    </h1>
+
+    <!-- Event Selection -->
+    <div class="mb-6">
+      <label class="block text-lg font-semibold mb-3">Chọn sự kiện:</label>
+      <select id="eventSelect" class="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">-- Vui lòng chọn sự kiện --</option>
+      </select>
+    </div>
+
+    <!-- QR Code Display -->
+    <div id="qrDisplay" class="hidden">
+      <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-8 text-center">
+        <h2 id="eventTitle" class="text-2xl font-bold mb-4 text-gray-800"></h2>
+        <p id="eventDetails" class="text-gray-600 mb-6"></p>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg inline-block mb-6">
+          <canvas id="qrCanvas" width="350" height="350"></canvas>
+        </div>
+        
+        <div class="mb-4">
+          <p class="text-sm text-gray-500 mb-2">URL điểm danh:</p>
+          <p id="qrUrl" class="text-xs bg-gray-100 p-3 rounded break-all"></p>
+        </div>
+        
+        <button id="btnDownload" class="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 shadow-lg">
+          <i data-lucide="download" class="w-5 h-5 inline mr-2"></i>
+          Tải xuống mã QR
+        </button>
+      </div>
+    </div>
+
+    <!-- Placeholder -->
+    <div id="placeholder" class="text-center py-16 text-gray-400">
+      <i data-lucide="qr-code" class="w-32 h-32 mx-auto mb-4 opacity-30"></i>
+      <p class="text-xl">Chọn sự kiện để tạo mã QR</p>
+    </div>
+  </div>
+
+  <script>
+    // Dữ liệu sự kiện mẫu
+    const events = [
+      { id: 'e1', title: 'Hội thảo AI và Machine Learning', date: '2025-10-18', time: '08:00', location: 'Hội trường A' },
+      { id: 'e2', title: 'Giao lưu Tân sinh viên K2025', date: '2025-10-20', time: '14:00', location: 'Sân trường' },
+      { id: 'e3', title: 'Workshop Kỹ năng mềm', date: '2025-10-25', time: '09:00', location: 'Phòng B101' },
+      { id: 'e4', title: 'Hội nghị Khoa học Công nghệ', date: '2025-11-01', time: '13:00', location: 'Hội trường B' },
+      { id: 'e5', title: 'Seminar Khởi nghiệp', date: '2025-11-05', time: '15:00', location: 'Phòng C201' },
+      { id: 'e6', title: 'Ngày hội Việc làm 2025', date: '2025-11-10', time: '08:30', location: 'Nhà thi đấu' }
+    ];
+
+    // DOM Elements
+    const eventSelect = document.getElementById('eventSelect');
+    const qrDisplay = document.getElementById('qrDisplay');
+    const placeholder = document.getElementById('placeholder');
+    const qrCanvas = document.getElementById('qrCanvas');
+    const eventTitle = document.getElementById('eventTitle');
+    const eventDetails = document.getElementById('eventDetails');
+    const qrUrl = document.getElementById('qrUrl');
+    const btnDownload = document.getElementById('btnDownload');
+
+    let currentEvent = null;
+    let currentQRUrl = '';
+
+    // Load events vào dropdown
+    function loadEvents() {
+      console.log('🔄 Đang load sự kiện...');
+      
+      events.forEach((event, index) => {
+        const option = document.createElement('option');
+        option.value = event.id;
+        option.textContent = `${event.title} (${event.date} - ${event.time})`;
+        eventSelect.appendChild(option);
+        console.log(`✅ Đã thêm: ${event.title}`);
+      });
+      
+      console.log(`✅ Đã load ${events.length} sự kiện`);
+    }
+
+    // Tạo mã QR
+    function generateQR(eventId) {
+      console.log('🎨 Tạo mã QR cho sự kiện:', eventId);
+      
+      currentEvent = events.find(e => e.id === eventId);
+      if (!currentEvent) {
+        console.error('❌ Không tìm thấy sự kiện');
+        return;
+      }
+
+      // Tạo QR data
+      const timestamp = Date.now();
+      const qrData = `${eventId}|checkin|${timestamp}`;
+      const baseUrl = window.location.origin;
+      currentQRUrl = `${baseUrl}/StudentQRLogin.html?qr=${encodeURIComponent(qrData)}`;
+
+      // Hiển thị thông tin
+      eventTitle.textContent = currentEvent.title;
+      eventDetails.textContent = `📅 ${currentEvent.date} | ⏰ ${currentEvent.time} | 📍 ${currentEvent.location}`;
+      qrUrl.textContent = currentQRUrl;
+
+      // Ẩn placeholder, hiện QR
+      placeholder.classList.add('hidden');
+      qrDisplay.classList.remove('hidden');
+
+      // Tạo QR code
+      console.log('🎨 Đang vẽ QR code...');
+      const ctx = qrCanvas.getContext('2d');
+      ctx.clearRect(0, 0, qrCanvas.width, qrCanvas.height);
+
+      QRCode.toCanvas(qrCanvas, currentQRUrl, {
+        width: 350,
+        height: 350,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        },
+        errorCorrectionLevel: 'H'
+      }, function(error) {
+        if (error) {
+          console.error('❌ Lỗi tạo QR:', error);
+          alert('Lỗi tạo mã QR: ' + error.message);
+        } else {
+          console.log('✅ QR code đã được tạo thành công!');
+        }
+      });
+
+      lucide.createIcons();
+    }
+
+    // Download QR
+    btnDownload.addEventListener('click', () => {
+      if (!currentEvent) return;
+      
+      const url = qrCanvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `QR_${currentEvent.title.replace(/\s+/g, '_')}_${currentEvent.date}.png`;
+      a.click();
+      
+      console.log('💾 Đã tải xuống mã QR');
+    });
+
+    // Event listener cho dropdown
+    eventSelect.addEventListener('change', (e) => {
+      const selectedId = e.target.value;
+      console.log('📌 Đã chọn sự kiện:', selectedId);
+      
+      if (selectedId) {
+        generateQR(selectedId);
+      } else {
+        qrDisplay.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+      }
+    });
+
+    // Khởi tạo
+    console.log('🚀 Khởi động ứng dụng...');
+    loadEvents();
+    lucide.createIcons();
+    console.log('✅ Sẵn sàng!');
+  </script>
+</body>
+</html>

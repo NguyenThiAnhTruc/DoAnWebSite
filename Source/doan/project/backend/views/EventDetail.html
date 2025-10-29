@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chi tiết sự kiện - HTML thuần</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+  <main class="max-w-4xl mx-auto p-6">
+    <button id="backBtn" class="flex items-center text-gray-600 dark:text-gray-300 hover:text-blue-600 mb-6 transition-colors">
+      <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Quay lại danh sách
+    </button>
+
+    <div id="card" class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden mb-8 fade">
+      <div id="hero" class="relative">
+        <img id="evImg" src="" alt="" class="w-full h-64 md:h-80 object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+        <div class="absolute bottom-6 left-6 right-6 text-white">
+          <div class="flex items-center space-x-4 mb-4">
+            <span id="statusBadge" class="px-4 py-2 rounded-full text-sm font-medium bg-white dark:bg-gray-800/20 backdrop-blur-sm">Trạng thái</span>
+            <span id="catBadge" class="px-4 py-2 bg-white dark:bg-gray-800/20 backdrop-blur-sm rounded-full text-sm font-medium">Thể loại</span>
+          </div>
+          <h1 id="evTitle" class="text-3xl md:text-4xl font-bold mb-2"></h1>
+          <p id="evOrg" class="text-lg opacity-90"></p>
+        </div>
+      </div>
+
+      <div class="p-6 md:p-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <!-- Left -->
+          <div class="space-y-4 text-gray-700 dark:text-gray-200">
+            <div class="flex items-center">
+              <i data-lucide="calendar" class="w-5 h-5 mr-3 text-blue-500"></i>
+              <div>
+                <div id="evDate" class="font-medium"></div>
+                <div id="evTime" class="text-sm text-gray-500 dark:text-gray-400"></div>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <i data-lucide="map-pin" class="w-5 h-5 mr-3 text-red-500"></i>
+              <div>
+                <div id="evLoc" class="font-medium"></div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Địa điểm tổ chức</div>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <i data-lucide="building-2" class="w-5 h-5 mr-3 text-green-500"></i>
+              <div>
+                <div id="evDept" class="font-medium"></div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Đơn vị tổ chức</div>
+              </div>
+            </div>
+          </div>
+          <!-- Right -->
+          <div class="space-y-4">
+            <div class="flex items-center text-gray-700 dark:text-gray-200">
+              <i data-lucide="users" class="w-5 h-5 mr-3 text-purple-500"></i>
+              <div>
+                <div id="evCount" class="font-medium"></div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">Số lượng tham gia</div>
+              </div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+              <div id="progress" class="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all progress-bar"></div>
+            </div>
+            <div id="registeredAlert" class="hidden flex items-center text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+              <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+              <span class="font-medium">Bạn đã đăng ký sự kiện này</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Mô tả sự kiện</h2>
+          <p id="evDesc" class="text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-line"></p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+          <button id="actionBtn"
+                  class="flex-1 py-4 px-6 rounded-xl font-semibold transition-all flex items-center justify-center text-white bg-gradient-to-r from-blue-500 to-purple-600">
+            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+            Đăng ký tham gia
+          </button>
+
+          <button id="shareBtn"
+                  class="px-6 py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-semibold hover:border-blue-500 hover:text-blue-600 transition-all flex items-center justify-center">
+            <i data-lucide="share-2" class="w-5 h-5 mr-2"></i>
+            Chia sẻ
+          </button>
+        </div>
+
+        <!-- Admin/Teacher actions -->
+        <div id="adminActions" class="hidden mt-4 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button id="editBtn"
+                  class="flex-1 py-3 px-6 rounded-xl font-semibold transition-all flex items-center justify-center text-blue-600 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100">
+            <i data-lucide="edit" class="w-5 h-5 mr-2"></i>
+            Chỉnh sửa sự kiện
+          </button>
+
+          <button id="deleteBtn"
+                  class="flex-1 py-3 px-6 rounded-xl font-semibold transition-all flex items-center justify-center text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100">
+            <i data-lucide="trash-2" class="w-5 h-5 mr-2"></i>
+            Xóa sự kiện
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 fade" id="extra">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Thông tin bổ sung</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+          <div class="font-medium text-blue-800">Thể loại</div>
+          <div id="extraCat" class="text-blue-600"></div>
+        </div>
+        <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+          <div class="font-medium text-purple-800">Khoa/Ban</div>
+          <div id="extraDept" class="text-purple-600"></div>
+        </div>
+        <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+          <div class="font-medium text-green-800">Trạng thái</div>
+          <div id="extraStatus" class="text-green-600"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ===== Helpers & API =====
+    let currentUser = null;
+    try { currentUser = (window.AuthService && AuthService.currentUser()) || JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null'); } catch(e){ currentUser = null; }
+
+    const qs = (s)=>document.querySelector(s);
+    function getParam(key){ const u=new URLSearchParams(location.search); return u.get(key); }
+    function idFromPath(){
+      // match /events/:id or /events/:id/...
+      const m = location.pathname.match(/\/events\/(.+)$/);
+      return m ? m[1] : null;
+    }
+    function isRegistered(id){ return regs.some(r=>r.eventId===id && r.status==='confirmed'); }
+    function statusText(s){ return s==='upcoming'?'Sắp diễn ra':s==='ongoing'?'Đang diễn ra':s==='completed'?'Đã kết thúc':s; }
+
+    // ===== Render =====
+    const id = getParam('id') || idFromPath() || null;
+
+    async function loadEvent(eventId) {
+      if (!eventId) return null;
+      try {
+        const url = '/api/events/' + encodeURIComponent(eventId);
+        const resp = window.AuthService ? await AuthService.authFetch(url) : await fetch(url);
+        const data = await resp.json();
+        // response shapes may differ; normalize
+        const e = data.event || data || data.events && data.events[0] || null;
+        if (!e) return null;
+        return {
+          id: e.id || e.event_id || e.eventId || String(e.event_id || e.id),
+          title: e.title,
+          description: e.description || e.short_description,
+          organizer: e.organizer?.name || e.organizer || (e.organizer && (e.organizer.first_name ? e.organizer.first_name + ' ' + e.organizer.last_name : '')) || '',
+          category: e.category || e.category_name,
+          department: e.department || e.department_name,
+          status: e.status,
+          date: e.start_date || e.date,
+          time: e.start_time || e.time,
+          location: e.location,
+          image: e.image_url || e.image || e.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop',
+          currentParticipants: e.current_participants || e.currentParticipants || e.registeredCount || 0,
+          maxParticipants: e.max_participants || e.maxParticipants || e.capacity || 0,
+          isRegistered: !!(e.is_registered || e.isRegistered)
+        };
+      } catch (err) {
+        console.error('loadEvent error', err);
+        return null;
+      }
+    }
+
+    let ev = null;
+    if (id) {
+      // load remote event
+      loadEvent(id).then(result => {
+        ev = result;
+        renderEvent();
+      }).catch(err => {
+        console.error(err);
+        ev = null; renderEvent();
+      });
+    } else {
+      ev = null; renderEvent();
+    }
+
+    const backBtn = qs('#backBtn');
+    const card = qs('#card');
+    const extra = qs('#extra');
+
+    function renderEvent(){
+      if(!ev){
+        document.body.innerHTML = `
+          <main class="p-6 text-center">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white dark:text-white">Không tìm thấy sự kiện</h2>
+            <a href="/events" class="mt-4 inline-block text-blue-600 hover:text-blue-500">← Quay lại</a>
+          </main>
+        `;
+        return;
+      }
+
+      qs('#evImg').src = ev.image; qs('#evImg').alt = ev.title;
+      qs('#catBadge').textContent = ev.category;
+      qs('#statusBadge').textContent = statusText(ev.status);
+      qs('#evTitle').textContent = ev.title;
+      qs('#evOrg').textContent = ev.organizer || '';
+      try { qs('#evDate').textContent = new Date(ev.date).toLocaleDateString('vi-VN', { weekday:'long', year:'numeric', month:'long', day:'numeric' }); } catch(e) { qs('#evDate').textContent = ev.date || ''; }
+      qs('#evTime').textContent = `Thời gian: ${ev.time || ''}`;
+      qs('#evLoc').textContent = ev.location || '';
+      qs('#evDept').textContent = ev.department || '';
+      qs('#evCount').textContent = `${ev.currentParticipants || ev.current_participants || 0} / ${ev.maxParticipants || ev.max_participants || 0} người`;
+      qs('#progress').style.width = Math.min(((ev.currentParticipants||ev.current_participants||0)/(ev.maxParticipants||ev.max_participants||1))*100,100) + '%';
+      qs('#evDesc').textContent = ev.description || '';
+      qs('#extraCat').textContent = ev.category || '';
+      qs('#extraDept').textContent = ev.department || '';
+      qs('#extraStatus').textContent = statusText(ev.status);
+
+      // Registered alert
+      if(ev.isRegistered || ev.is_registered) qs('#registeredAlert').classList.remove('hidden');
+
+      // Fix: Accept both 'upcoming' and 'published' status
+      const isOpenForRegistration = ['upcoming', 'published'].includes(ev.status);
+      const hasAvailableSlots = (ev.currentParticipants||ev.current_participants||0) < (ev.maxParticipants||ev.max_participants||99999);
+      const canRegister = isOpenForRegistration && hasAvailableSlots;
+      
+      const actionBtn = qs('#actionBtn');
+
+      function updateActionUI(){
+        const registered = !!(ev.isRegistered || ev.is_registered);
+        if(registered){
+          actionBtn.className = "flex-1 py-4 px-6 rounded-xl font-semibold transition-all flex items-center justify-center text-white bg-red-500 hover:bg-red-600";
+          actionBtn.innerHTML = '<i data-lucide="x-circle" class="w-5 h-5 mr-2"></i>Hủy đăng ký';
+        } else if (canRegister){
+          actionBtn.className = "flex-1 py-4 px-6 rounded-xl font-semibold transition-all flex items-center justify-center text-white bg-gradient-to-r from-blue-500 to-purple-600";
+          actionBtn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>Đăng ký tham gia';
+        } else {
+          actionBtn.outerHTML = `<div class="flex-1 py-4 px-6 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-xl font-semibold text-center">${ev.status==='completed'?'Sự kiện đã kết thúc':'Sự kiện đã đầy'}</div>`;
+        }
+        lucide.createIcons();
+      }
+      updateActionUI();
+
+      actionBtn && actionBtn.addEventListener('click', async ()=>{
+        // Registration via API
+        try {
+          if (!currentUser) {
+            // redirect to login
+            window.location.href = '/Login.html';
+            return;
+          }
+
+          const url = '/api/events/' + encodeURIComponent(ev.id) + '/register';
+          const body = { userId: currentUser.user_id || currentUser.id || currentUser.userId };
+          const resp = window.AuthService ? await AuthService.authFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }) : await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          const data = await resp.json();
+          if (!resp.ok || !data.success) {
+            alert(data.message || 'Đăng ký thất bại');
+            return;
+          }
+
+          // Update UI to reflect registration
+          ev.isRegistered = true; if (typeof ev.currentParticipants === 'number') ev.currentParticipants++;
+          qs('#registeredAlert').classList.remove('hidden');
+          updateActionUI();
+        } catch (err) {
+          console.error('register error', err);
+          alert('Có lỗi xảy ra, vui lòng thử lại');
+        }
+      });
+
+      // Share
+      qs('#shareBtn').addEventListener('click', ()=>{
+        if(navigator.share){
+          navigator.share({ title: ev.title, text: ev.description, url: location.href });
+        } else {
+          navigator.clipboard.writeText(location.href);
+          alert('Link đã được copy!');
+        }
+      });
+
+      // Show admin/teacher actions
+      if (currentUser && (currentUser.role === 'admin' || currentUser.role === 'teacher')) {
+        const adminActions = qs('#adminActions');
+        adminActions.classList.remove('hidden');
+        adminActions.classList.add('flex', 'flex-col', 'sm:flex-row');
+
+        // Edit button
+        qs('#editBtn').addEventListener('click', () => {
+          // Redirect to event form with event ID
+          window.location.href = `/EventForm.html?id=${ev.id}`;
+        });
+
+        // Delete button
+        qs('#deleteBtn').addEventListener('click', async () => {
+          if (!confirm(`Bạn có chắc chắn muốn xóa sự kiện "${ev.title}"?\n\nHành động này không thể hoàn tác!`)) {
+            return;
+          }
+
+          try {
+            const url = '/api/events/' + encodeURIComponent(ev.id);
+            const resp = window.AuthService 
+              ? await AuthService.authFetch(url, { method: 'DELETE' }) 
+              : await fetch(url, { 
+                  method: 'DELETE',
+                  headers: {
+                    'Authorization': 'Bearer ' + (localStorage.getItem('token') || '')
+                  }
+                });
+            
+            const data = await resp.json();
+            
+            if (!resp.ok || !data.success) {
+              alert(data.message || 'Xóa sự kiện thất bại');
+              return;
+            }
+
+            alert('Sự kiện đã được xóa thành công!');
+            // Redirect to events list
+            window.location.href = '/EventList.html';
+          } catch (err) {
+            console.error('Delete error:', err);
+            alert('Có lỗi xảy ra khi xóa sự kiện, vui lòng thử lại');
+          }
+        });
+      }
+
+      // Back
+      backBtn.addEventListener('click', ()=> history.back());
+
+      // animations
+      requestAnimationFrame(()=>{ card.classList.add('show'); extra.classList.add('show'); });
+    }
+
+    lucide.createIcons();
+  </script>
+<script src="/js/notifications.js"></script>
+<script src="/js/theme.js"></script>
+</body>
+</html>

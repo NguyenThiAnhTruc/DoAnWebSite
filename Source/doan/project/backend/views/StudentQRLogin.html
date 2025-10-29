@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Đăng nhập từ QR (Sinh viên)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="/js/theme.js"></script>
+<style>
+  .pop { opacity:0; transform:scale(.96); }
+  .pop.show { opacity:1; transform:scale(1); transition:.3s ease; }
+  .fade { opacity:0; transform:translateY(8px); }
+  .fade.show { opacity:1; transform:translateY(0); transition:.3s ease; }
+  .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:24px; z-index:60; }
+</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <!-- Back -->
+    <a href="event-list.html" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
+      <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i> Quay lại
+    </a>
+
+    <!-- Card -->
+    <div id="card" class="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 pop">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i data-lucide="user-check" class="w-8 h-8 text-white"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Điểm danh sự kiện</h2>
+        <p class="text-gray-600">Vui lòng đăng nhập để xác nhận tham gia</p>
+      </div>
+
+      <!-- Event info -->
+      <div id="eventBox" class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-6 hidden fade">
+        <h3 id="evTitle" class="font-semibold text-gray-900 mb-3">Tên sự kiện</h3>
+        <div class="space-y-2 text-sm text-gray-600">
+          <div class="flex items-center">
+            <i data-lucide="calendar" class="w-4 h-4 mr-2 text-blue-500"></i>
+            <span id="evDate">--/--/----</span>
+          </div>
+          <div class="flex items-center">
+            <i data-lucide="clock" class="w-4 h-4 mr-2 text-purple-500"></i>
+            <span id="evTime">--:--</span>
+          </div>
+          <div class="flex items-center">
+            <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-red-500"></i>
+            <span id="evLoc">Địa điểm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paste QR data (fallback nếu không truyền ?qr=...) -->
+      <details id="pasteWrap" class="mb-4">
+        <summary class="cursor-pointer text-sm text-gray-600 hover:text-gray-800">Dán chuỗi QR thủ công</summary>
+        <div class="mt-2">
+          <input id="qrInput" type="text" placeholder="Ví dụ: e1|checkin|1696400000000"
+                 class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"/>
+     <button id="btnUseQR" class="mt-2 px-3 py-2 bg-blue-600 text-white rounded-lg" aria-label="Dùng chuỗi QR" title="Dùng chuỗi QR">Dùng chuỗi này</button>
+        </div>
+      </details>
+
+      <!-- Login form -->
+      <form id="loginForm" class="space-y-4" novalidate>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Email sinh viên <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <i data-lucide="user" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="email" type="email" placeholder="Nhập email sinh viên" required
+                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"/>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <i data-lucide="lock" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="password" type="password" placeholder="Nhập mật khẩu" required
+                   class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"/>
+            <button type="button" id="togglePwd" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" aria-label="Hiển thị mật khẩu" title="Hiển thị mật khẩu">
+              <i data-lucide="eye" class="w-5 h-5" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-xs text-blue-700">
+          <div class="flex items-start space-x-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 mt-0.5"></i>
+            <div>
+              <p class="font-medium mb-1">Sử dụng tài khoản đã đăng ký:</p>
+              <p class="text-gray-600">Nhập email và mật khẩu giống khi đăng nhập vào hệ thống</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="btnSubmit" type="submit" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg">
+          Xác nhận điểm danh
+        </button>
+      </form>
+
+      <div class="mt-6 text-center text-sm text-gray-600">
+        Bằng cách điểm danh, bạn xác nhận đã tham gia sự kiện này
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden">
+    <div id="toastBox" class="px-4 py-2 rounded-lg shadow text-white bg-gray-800"></div>
+  </div>
+
+<script>
+  // ====== Events: fetch from backend instead of using hard-coded mock data
+  let events = [];
+
+  async function loadEventsFromApi() {
+    try {
+      console.log('DEBUG: fetching /api/events for StudentQRLogin');
+      const res = await fetch('/api/events?PageSize=1000');
+      if (!res.ok) throw new Error('Network response was not ok: ' + res.status);
+      const payload = await res.json();
+      console.log('DEBUG /api/events response (login page):', payload);
+
+      let rows = [];
+      if (Array.isArray(payload)) rows = payload;
+      else if (Array.isArray(payload.data)) rows = payload.data;
+      else if (Array.isArray(payload.events)) rows = payload.events;
+      else if (payload && payload.rows) rows = payload.rows;
+      else if (payload && payload.recordset) rows = payload.recordset;
+      else if (payload && payload.recordsets && Array.isArray(payload.recordsets[0])) rows = payload.recordsets[0];
+      else rows = payload;
+
+      events = rows.map(r => {
+        const id = r.event_id ?? r.id ?? r.eventId ?? r.EventId ?? r.EventID;
+        const title = r.title ?? r.name ?? r.event_name ?? r.EventName ?? r.Name ?? r.eventTitle;
+        const date = r.start_date ?? r.date ?? (r.start_datetime ? (r.start_datetime.split && r.start_datetime.split('T')[0]) : undefined);
+        const time = r.start_time ?? r.time ?? (r.start_datetime ? (new Date(r.start_datetime)).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : undefined);
+        const location = r.location ?? r.venue ?? r.place ?? '';
+        return { id: id, title: title ?? '', date: date ?? '', time: time ?? '', location };
+      });
+
+      console.log('DEBUG mapped events (login):', events);
+      return events;
+    } catch (err) {
+      console.error('Failed to load events from API (login):', err);
+      return [];
+    }
+  }
+
+  // Registrations lấy từ localStorage (để mô phỏng auto-register y hệt TSX)
+  function getRegs(){
+    try{ return JSON.parse(localStorage.getItem('registrations')||'[]'); }catch{ return []; }
+  }
+  function saveRegs(list){ localStorage.setItem('registrations', JSON.stringify(list)); }
+
+  const attendanceKey = 'attendance_records';
+  function getAttendance(){
+    try{ return JSON.parse(localStorage.getItem(attendanceKey)||'[]'); }catch{ return []; }
+  }
+  function saveAttendance(list){ localStorage.setItem(attendanceKey, JSON.stringify(list)); }
+
+  // Demo users (bao gồm student1/2/3 + lecturer/admin; mọi role đều có thể điểm danh theo TSX) :contentReference[oaicite:6]{index=6}
+  const demoUsers = [
+    { id:'1', name:'Nguyễn Văn An',   email:'student1@school.edu', role:'student', phone:'0123456790' },
+    { id:'2', name:'Trần Thị Bảo',    email:'student2@school.edu', role:'student', phone:'0123456791' },
+    { id:'3', name:'Lê Văn Cảnh',     email:'student3@school.edu', role:'student', phone:'0123456792' },
+    { id:'4', name:'TS. Trần Thị Bình', email:'lecturer1@school.edu', role:'lecturer', phone:'0987654321' },
+    { id:'5', name:'ThS. Lê Văn Cường', email:'lecturer2@school.edu', role:'lecturer', phone:'0987654322' },
+    { id:'6', name:'PGS. Phạm Thị Dung', email:'lecturer3@school.edu', role:'lecturer', phone:'0987654323' },
+    { id:'7', name:'Nguyễn Văn Admin', email:'admin@school.edu', role:'admin', phone:'0123456789' },
+    // Các email từ trang Scanner để linh hoạt test
+    { id:'8', name:'Student A', email:'student@school.edu', role:'student' },
+    { id:'9', name:'Student B', email:'student2@school.edu', role:'student' },
+    { id:'10', name:'Student C', email:'student3@school.edu', role:'student' },
+  ];
+
+  // ====== DOM ======
+  const card = document.getElementById('card');
+  const eventBox = document.getElementById('eventBox');
+  const evTitle = document.getElementById('evTitle');
+  const evDate = document.getElementById('evDate');
+  const evTime = document.getElementById('evTime');
+  const evLoc  = document.getElementById('evLoc');
+  const loginForm = document.getElementById('loginForm');
+  const email = document.getElementById('email');
+  const password = document.getElementById('password');
+  const togglePwd = document.getElementById('togglePwd');
+  const pasteWrap = document.getElementById('pasteWrap');
+  const qrInput = document.getElementById('qrInput');
+  const btnUseQR = document.getElementById('btnUseQR');
+
+  let parsedQR = null;
+
+  function toast(msg, type='info'){
+    const t=document.getElementById('toast'); const b=document.getElementById('toastBox');
+    b.textContent=msg; b.className='px-4 py-2 rounded-lg shadow text-white '+(type==='success'?'bg-green-600':type==='error'?'bg-red-600':'bg-gray-800');
+    t.classList.remove('hidden'); setTimeout(()=>t.classList.add('hidden'), 2200);
+  }
+
+  function parseQRData(s){
+    const parts = String(s||'').split('|');
+    if(parts.length!==3 || parts[1]!=='checkin') return null;
+    // Support both numeric IDs (e.g. "7") and legacy codes (e.g. "e1").
+    const raw = parts[0];
+    // Extract digits from raw id if present (e.g. 'e4' -> 4)
+    const digits = (raw && raw.match(/\d+/)) ? parseInt(raw.match(/\d+/)[0], 10) : NaN;
+    return { eventIdRaw: raw, eventId: isNaN(digits) ? raw : digits, timestamp: parseInt(parts[2])||0 };
+  }
+
+  function loadFromQuery(){
+    const qs = new URLSearchParams(location.search);
+    const q = qs.get('qr');
+    if(!q) return false;
+    return handleQR(q);
+  }
+
+  function handleQR(qrStr){
+    parsedQR = parseQRData(qrStr);
+    if(!parsedQR){ toast('Mã QR không hợp lệ','error'); return false; }
+    // Try to find the event in loaded events by comparing string forms (supports numeric ids and legacy codes)
+    const ev = events.find(x => String(x.id) === String(parsedQR.eventId) || String(x.id) === String(parsedQR.eventIdRaw));
+    if(!ev){ toast('Không tìm thấy sự kiện','error'); return false; }
+    // Render event info
+    evTitle.textContent = ev.title;
+    evDate.textContent = new Date(ev.date).toLocaleDateString('vi-VN',{ weekday:'long',year:'numeric',month:'long',day:'numeric' });
+    evTime.textContent = ev.time;
+    evLoc.textContent  = ev.location;
+    eventBox.classList.remove('hidden'); requestAnimationFrame(()=>eventBox.classList.add('show'));
+    return true;
+  }
+
+  // Toggle eye
+  togglePwd.onclick=()=>{
+    const isText = password.type==='text';
+    password.type = isText?'password':'text';
+    const icon = togglePwd.querySelector('i');
+    if(icon) {
+      icon.setAttribute('data-lucide', isText?'eye':'eye-off');
+      lucide.createIcons();
+    }
+  };
+
+  // Dán QR thủ công
+  btnUseQR.onclick=()=>{
+    if(!qrInput.value.trim()) return;
+    handleQR(qrInput.value.trim());
+  };
+
+  // Submit
+  loginForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if(!parsedQR){ toast('Chưa có dữ liệu QR hợp lệ','error'); return; }
+    
+    // Authenticate with real API
+    try {
+      const loginRes = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: email.value.trim(), 
+          password: password.value 
+        })
+      });
+      
+      const loginData = await loginRes.json();
+      
+      if(!loginRes.ok || !loginData.success) {
+        toast(loginData.message || 'Email hoặc mật khẩu không đúng','error');
+        return;
+      }
+      
+      const user = loginData.user;
+      const token = loginData.token;
+      
+      // Save token for future API calls
+      localStorage.setItem('token', token);
+
+      // Check if already attended
+      const checkRes = await fetch(`/api/attendance/check?eventId=${parsedQR.eventId}&userId=${user.user_id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if(checkRes.ok) {
+        const checkData = await checkRes.json();
+        if(checkData.attended) {
+          toast('Bạn đã điểm danh sự kiện này rồi','error');
+          return;
+        }
+      }
+
+      // Record attendance via API
+      const attendRes = await fetch('/api/attendance/checkin', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          // Send numeric id when possible (backend expects integer), otherwise send raw
+          event_id: parsedQR.eventId,
+          user_id: user.user_id,
+          check_in_method: 'qr_code'
+        })
+      });
+      
+      if(!attendRes.ok) {
+        let errMsg = 'Có lỗi khi điểm danh, vui lòng thử lại';
+        try { const errBody = await attendRes.json(); if(errBody && errBody.message) errMsg = errBody.message; } catch(e){}
+        toast(errMsg,'error');
+        return;
+      }
+
+      toast(`Điểm danh thành công! Chào mừng ${user.first_name} ${user.last_name}.`,'success');
+      setTimeout(()=>{ 
+        window.location.href = '/AttendanceSuccess.html?eventId='+encodeURIComponent(parsedQR.eventId)+'&userName='+encodeURIComponent(user.first_name + ' ' + user.last_name); 
+      }, 1000);
+      
+    } catch(err) {
+      console.error('Login error:', err);
+      toast('Có lỗi xảy ra, vui lòng thử lại','error');
+    }
+  });
+
+  // init: load events first then render
+  (async () => {
+    await loadEventsFromApi();
+    requestAnimationFrame(()=>card.classList.add('show'));
+    loadFromQuery();
+    lucide.createIcons();
+  })();
+</script>
+</body>
+</html>

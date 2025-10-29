@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Đăng ký - HTML thuần</title>
+<script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8">
+  <div class="w-full max-w-md">
+    <!-- Logo -->
+    <div class="text-center mb-8 fade-in show">
+      <a href="HomePage.html" class="inline-flex items-center space-x-3">
+        <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-16 h-16 object-contain rounded-full">
+        <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">SchoolEvents</span>
+      </a>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 zoom-in show">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white mb-2">Đăng ký tài khoản</h2>
+        <p class="text-gray-600 dark:text-gray-300">Tạo tài khoản để tham gia các sự kiện trường học</p>
+      </div>
+
+      <form id="form" class="space-y-6" novalidate>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Họ và tên <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <i data-lucide="user" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input name="name" type="text" placeholder="Nhập họ và tên" class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500" required />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Mã sinh viên <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <i data-lucide="book-open" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input name="studentId" type="text" placeholder="Ví dụ: SV001234" class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500" required />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Email <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <i data-lucide="mail" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input name="email" type="email" placeholder="example@school.edu" class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500" required />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Số điện thoại</label>
+          <div class="relative">
+            <i data-lucide="phone" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input name="phone" type="tel" placeholder="0123456789" class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Mật khẩu <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <i data-lucide="lock" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="pwd" name="password" type="password" placeholder="Tối thiểu 6 ký tự" class="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500" required />
+            <button type="button" id="togglePwd" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-300">
+              <i data-lucide="eye" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Xác nhận mật khẩu <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <i data-lucide="lock" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input id="pwd2" name="confirmPassword" type="password" placeholder="Nhập lại mật khẩu" class="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500" required />
+            <button type="button" id="togglePwd2" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-300">
+              <i data-lucide="eye" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-start">
+          <input id="agree" type="checkbox" class="w-4 h-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 mt-1" required aria-label="Đồng ý với điều khoản" />
+          <span class="ml-2 text-sm text-gray-600 dark:text-gray-300">
+            Tôi đồng ý với <a href="#" class="text-blue-600 hover:text-blue-500">Điều khoản sử dụng</a> và <a href="#" class="text-blue-600 hover:text-blue-500">Chính sách bảo mật</a>
+          </span>
+        </div>
+
+        <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center">
+          Đăng ký <i data-lucide="arrow-right" class="w-5 h-5 ml-2"></i>
+        </button>
+      </form>
+
+      <div class="mt-8 text-center">
+        <p class="text-gray-600 dark:text-gray-300">
+          Đã có tài khoản?
+          <a href="login.html" class="text-blue-600 hover:text-blue-500 font-medium">Đăng nhập ngay</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-6 text-center">
+      <a href="HomePage.html" class="text-gray-600 dark:text-gray-300 hover:text-blue-600">← Quay lại trang chủ</a>
+    </div>
+  </div>
+
+<script>
+  const form = document.getElementById('form');
+  const pwd = document.getElementById('pwd');
+  const pwd2 = document.getElementById('pwd2');
+  const togglePwd = document.getElementById('togglePwd');
+  const togglePwd2 = document.getElementById('togglePwd2');
+
+  function toggleEye(btn, input){
+    const eye = btn.querySelector('i');
+    const isText = input.type==='text';
+    input.type = isText?'password':'text';
+    eye.setAttribute('data-lucide', isText?'eye':'eye-off');
+    lucide.createIcons();
+  }
+  togglePwd.onclick = ()=>toggleEye(togglePwd, pwd);
+  togglePwd2.onclick = ()=>toggleEye(togglePwd2, pwd2);
+
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    if(!data.name || !data.email || !data.password || !data.studentId){
+      alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+      return;
+    }
+    if(String(data.password).length<6){
+      alert('Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+    if(data.password !== data.confirmPassword){
+      alert('Mật khẩu xác nhận không khớp');
+      return;
+    }
+    // Thay cho register() + navigate()
+    alert('Đăng ký thành công!');
+    window.location.href = 'dashboard.html';
+  });
+
+  lucide.createIcons();
+</script>
+<script src="/js/theme.js"></script>
+</body>
+</html>

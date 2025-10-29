@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Form sự kiện - HTML thuần</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    .modal { display:flex; align-items:center; justify-content:center; }
+    .zoom-in { opacity:0; transform: scale(.95); }
+    .zoom-in.show { opacity:1; transform: scale(1); transition: all .25s ease; }
+    .ringed { border-color: rgb(59 130 246); box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+  <main class="min-h-screen flex items-center justify-center p-4">
+    <!-- Modal Container -->
+    <div class="fixed inset-0 bg-black/50 modal">
+      <div id="sheet" class="zoom-in bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 id="formTitle" class="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">Tạo sự kiện mới</h2>
+          <a href="EventList.html" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 rounded-lg transition-colors" title="Đóng">
+            <i data-lucide="x" class="w-6 h-6 text-gray-500 dark:text-gray-400"></i>
+          </a>
+        </div>
+
+        <!-- Form -->
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+          <form id="eventForm" class="space-y-6" novalidate>
+            <!-- Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  Tiêu đề sự kiện <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <i data-lucide="file-text" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                  <input type="text" name="title" placeholder="Nhập tiêu đề sự kiện" required
+                         class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  Ngày tổ chức <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <i data-lucide="calendar" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                  <input type="date" name="date" required
+                         class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                         aria-label="Ngày tổ chức" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  Thời gian <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <i data-lucide="clock" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                  <input type="time" name="time" required step="60"
+                         class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                         aria-label="Thời gian" 
+                         placeholder="14:30" />
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Định dạng 24 giờ (VD: 08:00, 14:30, 20:00)</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  Địa điểm <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <i data-lucide="map-pin" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                  <input type="text" name="location" placeholder="Địa điểm tổ chức" required
+                         class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  Số lượng tối đa
+                </label>
+                <div class="relative">
+                  <i data-lucide="users" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                  <input type="number" name="maxParticipants" placeholder="50" min="1"
+                         class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  Đơn vị tổ chức
+                </label>
+                <div class="relative">
+                  <i data-lucide="building-2" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                  <input type="text" name="organizer" placeholder="Tên đơn vị tổ chức"
+                         class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Thể loại</label>
+                <div class="relative">
+                  <i data-lucide="tag" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                  <select name="category"
+                          class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Chọn thể loại</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Khoa/Ban</label>
+                <select name="department"
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="">Chọn khoa/ban</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                Mô tả sự kiện <span class="text-red-500">*</span>
+              </label>
+              <textarea name="description" rows="4" placeholder="Mô tả chi tiết về sự kiện..." required
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+            </div>
+
+            <!-- Image selection -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-4">Ảnh sự kiện</label>
+              <div id="imgGrid" class="grid grid-cols-2 md:grid-cols-3 gap-3"></div>
+              <div class="mt-3">
+                <input type="url" name="image" placeholder="Hoặc nhập URL ảnh tùy chỉnh"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" />
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <a href="EventList.html"
+                 class="px-6 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-semibold hover:border-gray-400 transition-all text-center">
+                Hủy
+              </a>
+              <button type="submit"
+                      class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center justify-center">
+                <i data-lucide="save" class="w-5 h-5 mr-2"></i>
+                Lưu sự kiện
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('eventForm');
+    const sheet = document.getElementById('sheet');
+    const formTitle = document.getElementById('formTitle');
+
+    // Check if editing existing event
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('id');
+    const isEditing = !!eventId;
+
+    // Update form title
+    if (isEditing) {
+      formTitle.textContent = 'Chỉnh sửa sự kiện';
+    }
+
+    const categories = ['Hội thảo','Workshop','Cuộc thi','Sinh hoạt','Thể thao','Văn hóa','Học thuật','Kỹ năng','Khác'];
+    const departments = ['CNTT','Mỹ thuật','Kinh tế','Kỹ thuật','Y khoa','Luật','Ngoại ngữ','Giáo dục','Khác'];
+    const sampleImages = [
+      'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=800&h=400&fit=crop'
+    ];
+
+    // Populate selects
+    const catSel = form.elements['category'];
+    const depSel = form.elements['department'];
+    categories.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
+    departments.forEach(d=>{ const o=document.createElement('option'); o.value=d; o.textContent=d; depSel.appendChild(o); });
+
+    // Sample images grid
+    const imgGrid = document.getElementById('imgGrid');
+    const urlInput = form.elements['image'];
+    function renderImages(){
+      imgGrid.innerHTML='';
+      sampleImages.forEach((src,i)=>{
+        const wrap=document.createElement('div');
+        wrap.className='relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600';
+        wrap.innerHTML = `<img src="${src}" alt="Option ${i+1}" class="w-full h-20 object-cover" />`;
+        wrap.addEventListener('click', ()=>{
+          urlInput.value = src;
+          // highlight
+          imgGrid.querySelectorAll('div').forEach(d=>d.classList.remove('ringed'));
+          wrap.classList.add('ringed');
+        });
+        imgGrid.appendChild(wrap);
+      });
+    }
+
+    // Load event data if editing
+    async function loadEventData() {
+      if (!isEditing) return;
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/events/${eventId}`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        
+        if (!response.ok) {
+          alert('Không thể tải dữ liệu sự kiện');
+          window.location.href = '/EventList.html';
+          return;
+        }
+        
+        const result = await response.json();
+        const event = result.event || result;
+        
+        // Fill form with event data
+        if (form.elements['title']) form.elements['title'].value = event.title || '';
+        if (form.elements['description']) form.elements['description'].value = event.description || '';
+        if (form.elements['category']) form.elements['category'].value = event.category || event.category_name || '';
+        if (form.elements['department']) form.elements['department'].value = event.department || event.department_name || '';
+        if (form.elements['date']) form.elements['date'].value = event.start_date ? event.start_date.split('T')[0] : '';
+        if (form.elements['time']) form.elements['time'].value = event.start_time || '';
+        if (form.elements['location']) form.elements['location'].value = event.location || '';
+        if (form.elements['maxParticipants']) form.elements['maxParticipants'].value = event.max_participants || '';
+        if (form.elements['organizer']) form.elements['organizer'].value = event.organizer || '';
+        
+        // Set image
+        if (event.image_url) {
+          urlInput.value = event.image_url;
+          // Highlight if it's one of sample images
+          const imgElements = imgGrid.querySelectorAll('div');
+          imgElements.forEach((div, idx) => {
+            if (sampleImages[idx] === event.image_url) {
+              div.classList.add('ringed');
+            }
+          });
+        }
+        
+        console.log('✅ Loaded event data:', event);
+      } catch (err) {
+        console.error('Error loading event:', err);
+        alert('Lỗi khi tải dữ liệu sự kiện');
+      }
+    }
+
+    // Submit
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const data = Object.fromEntries(new FormData(form).entries());
+      
+      console.log('Form data:', data);
+      console.log('Time value from form:', data.time, 'Type:', typeof data.time);
+      console.log('Selected image URL:', data.image);
+      
+      // Validate required fields
+      const required = ['title', 'description', 'date', 'time', 'location'];
+      for (const k of required) {
+        if (!data[k]) {
+          alert('Vui lòng điền đầy đủ thông tin bắt buộc');
+          return;
+        }
+      }
+      
+      // Convert time to 24-hour format if needed (handle Vietnamese format)
+      const convertTo24Hour = (timeStr) => {
+        if (!timeStr) return '00:00';
+        
+        // Already in HH:MM format
+        if (/^\d{2}:\d{2}$/.test(timeStr)) {
+          return timeStr;
+        }
+        
+        // Vietnamese format: "06:06 CH" or "08:00 SA"
+        const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(CH|SA)$/i);
+        if (match) {
+          let hours = parseInt(match[1], 10);
+          const minutes = match[2];
+          const period = match[3].toUpperCase();
+          
+          if (period === 'CH' && hours !== 12) hours += 12;
+          else if (period === 'SA' && hours === 12) hours = 0;
+          
+          return `${hours.toString().padStart(2, '0')}:${minutes}`;
+        }
+        
+        return timeStr; // Return as-is if unknown format
+      };
+      
+      const convertedTime = convertTo24Hour(data.time);
+      const convertedEndTime = data.endTime ? convertTo24Hour(data.endTime) : convertedTime;
+      
+      console.log('Converted time:', data.time, '=>', convertedTime);
+      
+      // Prepare payload
+      const payload = {
+        title: data.title,
+        description: data.description,
+        short_description: data.short_description || data.description.substring(0, 150),
+        category: data.category || 'Khác',
+        start_date: data.date,
+        start_time: convertedTime,
+        end_date: data.endDate || data.date,
+        end_time: convertedEndTime,
+        location: data.location,
+        max_participants: parseInt(data.maxParticipants || '50', 10),
+        status: 'published',
+        image_url: data.image || sampleImages[0]
+      };
+      
+      console.log('Payload to send:', payload);
+      console.log('Image URL in payload:', payload.image_url);
+      
+      try {
+        // Get token
+        const token = localStorage.getItem('token');
+        if (!token) {
+          alert('Bạn cần đăng nhập để tạo sự kiện');
+          window.location.href = '/Login.html';
+          return;
+        }
+        
+        // Call API to create event
+        const response = await fetch(isEditing ? `/api/events/${eventId}` : '/api/events', {
+          method: isEditing ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+          alert(isEditing ? '✅ Cập nhật sự kiện thành công!' : '✅ Tạo sự kiện thành công!');
+          
+          // Clear any cached data
+          sessionStorage.removeItem('eventsCache');
+          localStorage.removeItem('eventsCache');
+          
+          // Redirect to event list or admin dashboard
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          if (user.role === 'admin' || user.role === 'teacher') {
+            // Add timestamp to force reload
+            window.location.href = '/AdminDashboard.html?refresh=' + Date.now();
+          } else {
+            window.location.href = '/EventList.html?refresh=' + Date.now();
+          }
+        } else {
+          alert('❌ Lỗi: ' + (result.message || (isEditing ? 'Không thể cập nhật sự kiện' : 'Không thể tạo sự kiện')));
+        }
+      } catch (err) {
+        console.error(isEditing ? 'Error updating event:' : 'Error creating event:', err);
+        alert('❌ Lỗi khi ' + (isEditing ? 'cập nhật' : 'tạo') + ' sự kiện: ' + err.message);
+      }
+    });
+
+    // Anim + init
+    requestAnimationFrame(()=> sheet.classList.add('show'));
+    renderImages();
+    loadEventData(); // Load event data if editing
+    lucide.createIcons();
+  </script>
+<script src="/js/theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Test Messaging API</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+  <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-2xl font-bold mb-6">🔍 Test Messaging System API</h1>
+    
+    <div class="space-y-4">
+      <!-- Test 1: Check Auth -->
+      <div class="border rounded p-4">
+        <h2 class="font-bold text-lg mb-2">1. Kiểm tra Authentication</h2>
+        <button onclick="testAuth()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+          Test Auth
+        </button>
+        <div id="authResult" class="mt-2 p-3 bg-gray-50 rounded"></div>
+      </div>
+      
+      <!-- Test 2: Get Users -->
+      <div class="border rounded p-4">
+        <h2 class="font-bold text-lg mb-2">2. Lấy danh sách Users</h2>
+        <button onclick="testGetUsers()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+          Get Users
+        </button>
+        <div id="usersResult" class="mt-2 p-3 bg-gray-50 rounded"></div>
+      </div>
+      
+      <!-- Test 3: Get Conversations -->
+      <div class="border rounded p-4">
+        <h2 class="font-bold text-lg mb-2">3. Lấy danh sách Conversations</h2>
+        <button onclick="testGetConversations()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+          Get Conversations
+        </button>
+        <div id="conversationsResult" class="mt-2 p-3 bg-gray-50 rounded"></div>
+      </div>
+      
+      <!-- Test 4: Send Message -->
+      <div class="border rounded p-4">
+        <h2 class="font-bold text-lg mb-2">4. Gửi tin nhắn</h2>
+        <div class="space-y-2">
+          <input type="number" id="convId" placeholder="Conversation ID" 
+                 class="border rounded px-3 py-2 w-full">
+          <input type="text" id="messageContent" placeholder="Nội dung tin nhắn" 
+                 class="border rounded px-3 py-2 w-full">
+          <button onclick="testSendMessage()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            Send Message
+          </button>
+        </div>
+        <div id="sendResult" class="mt-2 p-3 bg-gray-50 rounded"></div>
+      </div>
+      
+      <!-- Test 5: Create Conversation -->
+      <div class="border rounded p-4">
+        <h2 class="font-bold text-lg mb-2">5. Tạo Conversation mới</h2>
+        <div class="space-y-2">
+          <input type="text" id="participantIds" placeholder="Participant IDs (comma separated, e.g. 2,3)" 
+                 class="border rounded px-3 py-2 w-full">
+          <input type="text" id="convTitle" placeholder="Tiêu đề" 
+                 class="border rounded px-3 py-2 w-full">
+          <button onclick="testCreateConversation()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+            Create Conversation
+          </button>
+        </div>
+        <div id="createResult" class="mt-2 p-3 bg-gray-50 rounded"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    };
+  }
+
+  function showResult(elementId, data, isError = false) {
+    const el = document.getElementById(elementId);
+    el.className = `mt-2 p-3 rounded ${isError ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`;
+    el.innerHTML = `<pre class="text-xs overflow-auto">${JSON.stringify(data, null, 2)}</pre>`;
+  }
+
+  async function testAuth() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = localStorage.getItem('token');
+    
+    showResult('authResult', {
+      hasUser: !!user.user_id,
+      hasToken: !!token,
+      user: user,
+      tokenPreview: token ? token.substring(0, 20) + '...' : null
+    });
+  }
+
+  async function testGetUsers() {
+    try {
+      const response = await fetch('/api/users', {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      showResult('usersResult', {
+        count: data.length,
+        users: data
+      });
+    } catch (error) {
+      showResult('usersResult', { error: error.message }, true);
+    }
+  }
+
+  async function testGetConversations() {
+    try {
+      const response = await fetch('/api/messages/conversations', {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      showResult('conversationsResult', {
+        count: data.length,
+        conversations: data
+      });
+    } catch (error) {
+      showResult('conversationsResult', { error: error.message }, true);
+    }
+  }
+
+  async function testSendMessage() {
+    const convId = document.getElementById('convId').value;
+    const content = document.getElementById('messageContent').value;
+    
+    if (!convId || !content) {
+      showResult('sendResult', { error: 'Vui lòng nhập đầy đủ thông tin!' }, true);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/messages/conversations/${convId}/messages`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ content })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      showResult('sendResult', {
+        success: true,
+        message: data
+      });
+    } catch (error) {
+      showResult('sendResult', { error: error.message }, true);
+    }
+  }
+
+  async function testCreateConversation() {
+    const participantIds = document.getElementById('participantIds').value
+      .split(',')
+      .map(id => parseInt(id.trim()))
+      .filter(id => !isNaN(id));
+    const title = document.getElementById('convTitle').value || 'Test Conversation';
+    
+    if (participantIds.length === 0) {
+      showResult('createResult', { error: 'Vui lòng nhập participant IDs!' }, true);
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/messages/conversations', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ 
+          participantIds,
+          title 
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      showResult('createResult', {
+        success: true,
+        conversationId: data.conversation_id,
+        data: data
+      });
+    } catch (error) {
+      showResult('createResult', { error: error.message }, true);
+    }
+  }
+
+  // Auto test auth on load
+  window.onload = () => {
+    testAuth();
+  };
+</script>
+</body>
+</html>

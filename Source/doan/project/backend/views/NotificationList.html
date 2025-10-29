@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Thông Báo - SchoolEvents</title>
+    <link href="../css/style.css" rel="stylesheet">
+    <script src="/js/theme.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <script src="/js/navigation.js"></script>
+
+    <!-- Main Content -->
+    <main class="pt-20 pb-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                            🔔 Tất Cả Thông Báo
+                        </h1>
+                        <p class="text-gray-600 dark:text-gray-400">
+                            Xem và quản lý tất cả thông báo của bạn
+                        </p>
+                    </div>
+                    <button onclick="markAllAsRead()" 
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Đánh dấu tất cả đã đọc
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+                <nav class="flex space-x-8" aria-label="Tabs">
+                    <button onclick="filterNotifications('all')" 
+                            class="filter-tab active border-b-2 border-blue-600 py-4 px-1 text-sm font-medium text-blue-600 dark:text-blue-400">
+                        Tất cả
+                        <span id="countAll" class="ml-2 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 py-0.5 px-2.5 rounded-full text-xs">0</span>
+                    </button>
+                    <button onclick="filterNotifications('unread')" 
+                            class="filter-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+                        Chưa đọc
+                        <span id="countUnread" class="ml-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 py-0.5 px-2.5 rounded-full text-xs">0</span>
+                    </button>
+                    <button onclick="filterNotifications('event')" 
+                            class="filter-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+                        Sự kiện
+                        <span id="countEvent" class="ml-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 py-0.5 px-2.5 rounded-full text-xs">0</span>
+                    </button>
+                    <button onclick="filterNotifications('system')" 
+                            class="filter-tab border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300">
+                        Hệ thống
+                        <span id="countSystem" class="ml-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 py-0.5 px-2.5 rounded-full text-xs">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Notifications List -->
+            <div id="notificationsList" class="space-y-3">
+                <!-- Loading state -->
+                <div class="text-center py-12">
+                    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <p class="mt-4 text-gray-600 dark:text-gray-400">Đang tải thông báo...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="mt-8 flex justify-center items-center gap-2" style="display: none;">
+                <button onclick="previousPage()" 
+                        class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Trước
+                </button>
+                <span id="pageInfo" class="px-4 py-2 text-gray-700 dark:text-gray-300"></span>
+                <button onclick="nextPage()" 
+                        class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Sau
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/notifications.js"></script>
+    <script>
+        let currentFilter = 'all';
+        let currentPage = 1;
+        let allNotifications = [];
+        const pageSize = 20;
+
+        // Load notifications on page load
+        async function loadNotifications() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user || !user.user_id) {
+                    window.location.href = '/Login.html';
+                    return;
+                }
+
+                const response = await fetch(`/api/notifications?userId=${user.user_id}&limit=100&unreadOnly=false`);
+                if (!response.ok) throw new Error('Failed to load notifications');
+
+                const data = await response.json();
+                
+                // Normalize response - handle both array and object formats
+                if (Array.isArray(data)) {
+                    allNotifications = data;
+                } else if (data && Array.isArray(data.notifications)) {
+                    allNotifications = data.notifications;
+                } else if (data && Array.isArray(data.data)) {
+                    allNotifications = data.data;
+                } else {
+                    console.warn('Unexpected API response format:', data);
+                    allNotifications = [];
+                }
+                
+                console.log('✅ Loaded notifications:', allNotifications.length);
+
+                updateCounts();
+                displayNotifications();
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                document.getElementById('notificationsList').innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-12 w-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <p class="mt-4 text-gray-600 dark:text-gray-400">Không thể tải thông báo</p>
+                        <button onclick="loadNotifications()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Thử lại
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateCounts() {
+            // Ensure allNotifications is an array
+            if (!Array.isArray(allNotifications)) {
+                console.error('allNotifications is not an array:', allNotifications);
+                allNotifications = [];
+            }
+            
+            const unreadCount = allNotifications.filter(n => !n.is_read).length;
+            const eventCount = allNotifications.filter(n => n.notification_type === 'event_reminder' || n.notification_type === 'event_update').length;
+            const systemCount = allNotifications.filter(n => n.notification_type !== 'event_reminder' && n.notification_type !== 'event_update').length;
+
+            document.getElementById('countAll').textContent = allNotifications.length;
+            document.getElementById('countUnread').textContent = unreadCount;
+            document.getElementById('countEvent').textContent = eventCount;
+            document.getElementById('countSystem').textContent = systemCount;
+        }
+
+        function filterNotifications(filter) {
+            currentFilter = filter;
+            currentPage = 1;
+
+            // Update tab styles
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+                tab.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            });
+            event.target.closest('.filter-tab').classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+            event.target.closest('.filter-tab').classList.add('border-blue-600', 'text-blue-600', 'dark:text-blue-400');
+
+            displayNotifications();
+        }
+
+        function displayNotifications() {
+            let filtered = [...allNotifications];
+
+            // Apply filter
+            if (currentFilter === 'unread') {
+                filtered = filtered.filter(n => !n.is_read);
+            } else if (currentFilter === 'event') {
+                filtered = filtered.filter(n => n.notification_type === 'event_reminder' || n.notification_type === 'event_update');
+            } else if (currentFilter === 'system') {
+                filtered = filtered.filter(n => n.notification_type !== 'event_reminder' && n.notification_type !== 'event_update');
+            }
+
+            // Pagination
+            const totalPages = Math.ceil(filtered.length / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageNotifications = filtered.slice(startIndex, endIndex);
+
+            // Display
+            const container = document.getElementById('notificationsList');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <p class="mt-4 text-gray-600 dark:text-gray-400">Không có thông báo nào</p>
+                    </div>
+                `;
+                document.getElementById('pagination').style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = pageNotifications.map(notification => `
+                <div class="notification-item ${notification.is_read ? 'bg-white dark:bg-gray-800' : 'bg-blue-50 dark:bg-blue-900/20'} border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-all duration-200">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            ${getNotificationIcon(notification.notification_type)}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+                                        ${notification.title || 'Thông báo'}
+                                        ${!notification.is_read ? '<span class="ml-2 inline-block w-2 h-2 bg-blue-600 rounded-full"></span>' : ''}
+                                    </h3>
+                                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                        ${notification.message}
+                                    </p>
+                                    <div class="mt-2 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-500">
+                                        <span>${formatDate(notification.created_at)}</span>
+                                        <span class="px-2 py-1 rounded-full ${getTypeColor(notification.notification_type)}">
+                                            ${getTypeLabel(notification.notification_type)}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 ml-4">
+                                    ${!notification.is_read ? `
+                                        <button onclick="markAsRead(${notification.notification_id})" 
+                                                class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm">
+                                            Đánh dấu đã đọc
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Update pagination
+            if (totalPages > 1) {
+                document.getElementById('pagination').style.display = 'flex';
+                document.getElementById('pageInfo').textContent = `Trang ${currentPage} / ${totalPages}`;
+            } else {
+                document.getElementById('pagination').style.display = 'none';
+            }
+        }
+
+        function getNotificationIcon(type) {
+            const icons = {
+                'event_reminder': '📅',
+                'event_update': '📢',
+                'registration_confirmed': '✅',
+                'event_cancelled': '❌',
+                'default': '🔔'
+            };
+            return `<span class="text-2xl">${icons[type] || icons.default}</span>`;
+        }
+
+        function getTypeColor(type) {
+            const colors = {
+                'event_reminder': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                'event_update': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+                'registration_confirmed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                'event_cancelled': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+            };
+            return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        }
+
+        function getTypeLabel(type) {
+            const labels = {
+                'event_reminder': 'Nhắc nhở sự kiện',
+                'event_update': 'Cập nhật sự kiện',
+                'registration_confirmed': 'Xác nhận đăng ký',
+                'event_cancelled': 'Hủy sự kiện'
+            };
+            return labels[type] || 'Thông báo';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 7) {
+                return date.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else if (days > 0) {
+                return `${days} ngày trước`;
+            } else if (hours > 0) {
+                return `${hours} giờ trước`;
+            } else if (minutes > 0) {
+                return `${minutes} phút trước`;
+            } else {
+                return 'Vừa xong';
+            }
+        }
+
+        async function markAsRead(notificationId) {
+            try {
+                const response = await fetch(`/api/notifications/${notificationId}/read`, {
+                    method: 'PUT'
+                });
+
+                if (response.ok) {
+                    // Update local data
+                    const notification = allNotifications.find(n => n.notification_id === notificationId);
+                    if (notification) {
+                        notification.is_read = true;
+                    }
+                    updateCounts();
+                    displayNotifications();
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user'));
+                const unreadIds = allNotifications.filter(n => !n.is_read).map(n => n.notification_id);
+
+                if (unreadIds.length === 0) {
+                    alert('Không có thông báo nào chưa đọc!');
+                    return;
+                }
+
+                // Mark all as read
+                await Promise.all(unreadIds.map(id => 
+                    fetch(`/api/notifications/${id}/read`, { method: 'PUT' })
+                ));
+
+                // Update local data
+                allNotifications.forEach(n => n.is_read = true);
+                updateCounts();
+                displayNotifications();
+
+                alert(`Đã đánh dấu ${unreadIds.length} thông báo là đã đọc!`);
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+                alert('Có lỗi xảy ra khi đánh dấu thông báo!');
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                displayNotifications();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function nextPage() {
+            let filtered = [...allNotifications];
+            if (currentFilter === 'unread') {
+                filtered = filtered.filter(n => !n.is_read);
+            } else if (currentFilter === 'event') {
+                filtered = filtered.filter(n => n.notification_type === 'event_reminder' || n.notification_type === 'event_update');
+            } else if (currentFilter === 'system') {
+                filtered = filtered.filter(n => n.notification_type !== 'event_reminder' && n.notification_type !== 'event_update');
+            }
+
+            const totalPages = Math.ceil(filtered.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                displayNotifications();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Initialize
+        loadNotifications();
+    </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Điểm danh QR • SchoolEvents</title>
+  <!-- TailwindCSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QRCode.js - Multiple CDN sources for fallback -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" 
+          integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" 
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer"></script>
+  <!-- html5-qrcode -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body { background: linear-gradient(to bottom right, #eef2ff, #f5f3ff); min-height: 100vh; }
+    .tab-active {
+      background: linear-gradient(to right, #3b82f6, #8b5cf6);
+      color: white;
+    }
+    .tab-inactive {
+      background: white;
+      color: #4b5563;
+      border: 1px solid #e5e7eb;
+    }
+    .fade-in {
+      animation: fadeIn .4s ease forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center p-6">
+
+  <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-6 md:p-10 relative fade-in">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <i data-lucide="qr-code" class="w-6 h-6 text-blue-600"></i>
+        Điểm danh QR
+      </h1>
+      <button onclick="window.history.back()" class="flex items-center gap-1 text-gray-500 hover:text-blue-600">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> Quay lại
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex mb-6 space-x-3">
+      <button id="tab-generate" class="tab-active flex-1 py-2 rounded-xl font-medium">Tạo mã QR</button>
+      <button id="tab-scan" class="tab-inactive flex-1 py-2 rounded-xl font-medium">Quét mã QR</button>
+    </div>
+
+    <!-- Tab content -->
+    <div id="panel-generate" class="fade-in">
+      <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
+        <h2 class="text-lg font-semibold mb-2 flex items-center gap-2">
+          <i data-lucide="share-2" class="w-5 h-5"></i> Tạo & chia sẻ mã QR
+        </h2>
+        <p class="text-sm text-blue-100 mb-4">
+          Chọn sự kiện và tạo mã QR điểm danh. Sinh viên quét mã này sẽ được chuyển đến trang đăng nhập để xác nhận tham dự.
+        </p>
+        
+        <!-- Event Selection -->
+        <div class="bg-white rounded-xl p-4 mb-4 text-gray-800">
+          <label for="eventSelect" class="block text-sm font-medium mb-2">Chọn sự kiện để tạo mã QR:</label>
+          <select id="eventSelect" aria-label="Chọn sự kiện để tạo mã QR" title="Chọn sự kiện để tạo mã QR" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <option value="">-- Chọn sự kiện --</option>
+          </select>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 text-center shadow-md min-h-[500px]">
+          <!-- Placeholder -->
+          <div id="qrPlaceholder" class="py-12">
+            <i data-lucide="qr-code" class="w-20 h-20 mx-auto mb-4 opacity-50 text-gray-400"></i>
+            <p class="text-lg font-medium text-gray-600">Vui lòng chọn sự kiện để tạo mã QR</p>
+            <p class="text-sm mt-2 text-gray-500">Chọn sự kiện từ dropdown bên trên</p>
+          </div>
+          
+          <!-- QR Container -->
+          <div id="qrContainer" class="hidden">
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-2xl inline-block mb-4 shadow-inner">
+              <div id="qrcode" class="mx-auto border-4 border-white rounded-lg shadow-lg bg-white p-4"></div>
+            </div>
+            <p id="eventInfo" class="text-gray-900 font-bold mb-3 text-xl"></p>
+            <p id="qrText" class="text-gray-600 mb-6 break-all text-xs px-4 max-w-2xl mx-auto"></p>
+            <div class="flex justify-center gap-3">
+              <button id="btnDownloadQR" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all">
+                <i data-lucide="download" class="w-5 h-5 inline mr-2"></i> Tải xuống mã QR
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-scan" class="hidden fade-in">
+      <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
+        <h2 class="text-lg font-semibold mb-2 flex items-center gap-2">
+          <i data-lucide="scan" class="w-5 h-5"></i> Quét mã QR
+        </h2>
+        <p class="text-sm text-blue-100 mb-4">Sử dụng camera để quét mã QR từ sinh viên hoặc sự kiện.</p>
+        <div class="bg-white rounded-xl p-6 shadow-md text-center">
+          <div id="qr-reader" class="mx-auto rounded-lg overflow-hidden"></div>
+          <p id="scan-result" class="mt-4 text-gray-700"></p>
+          <button id="btnStopScan" class="hidden mt-4 bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200">Dừng quét</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/theme.js"></script>
+  <script>
+    // --- Check if QRCode library is loaded ---
+    if (typeof QRCode === 'undefined') {
+      console.error('❌ QRCode library not loaded!');
+      console.log('Trying to load alternative QRCode library...');
+      
+      // Load alternative library
+      const script = document.createElement('script');
+      script.src = 'https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js';
+      script.onload = function() {
+        console.log('✅ Alternative QRCode library loaded');
+      };
+      script.onerror = function() {
+        console.error('❌ Failed to load alternative library');
+        alert('Không thể tải thư viện QR Code. Vui lòng kiểm tra kết nối internet.');
+      };
+      document.head.appendChild(script);
+    } else {
+      console.log('✅ QRCode library loaded successfully');
+    }
+    
+    // --- Lucide init ---
+    lucide.createIcons();
+
+    // --- Production: fetch events from backend API ---
+    // NOTE: Previously this page used a hard-coded `events` array (mock). That caused the dropdown
+    // to show data that doesn't come from the SQL database. Replace with a fetch so the UI shows
+    // exactly what the backend returns.
+    let events = [];
+
+    async function loadEventsFromApi() {
+      try {
+        console.log('DEBUG: fetching /api/events');
+        const res = await fetch('/api/events?PageSize=1000');
+        if (!res.ok) throw new Error('Network response was not ok: ' + res.status);
+        const payload = await res.json();
+        console.log('DEBUG /api/events response:', payload);
+
+        // payload may contain { total, data } or be an array — handle common shapes
+        let rows = [];
+        if (Array.isArray(payload)) rows = payload;
+        else if (Array.isArray(payload.data)) rows = payload.data;
+        else if (Array.isArray(payload.events)) rows = payload.events;
+        else if (payload && payload.rows) rows = payload.rows;
+        else if (payload && payload.recordset) rows = payload.recordset; // mssql style
+        else if (payload && payload.recordsets && Array.isArray(payload.recordsets[0])) rows = payload.recordsets[0];
+        else rows = payload;
+
+        // Map backend fields defensively to the shape the UI expects
+        events = rows.map(r => {
+          const id = r.event_id ?? r.id ?? r.eventId ?? r.EventId ?? r.EventID;
+          const title = r.title ?? r.name ?? r.event_name ?? r.EventName ?? r.Name ?? r.eventTitle;
+          const date = r.start_date ?? r.date ?? (r.start_datetime ? (r.start_datetime.split && r.start_datetime.split('T')[0]) : undefined);
+          const time = r.start_time ?? r.time ?? (r.start_datetime ? (new Date(r.start_datetime)).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : undefined);
+          const location = r.location ?? r.venue ?? r.place ?? '';
+          return { id: id?.toString() ?? '', title: title ?? '', date: date ?? '', time: time ?? '', location };
+        });
+
+  console.log('DEBUG mapped events:', events);
+  loadEvents();
+      } catch (err) {
+        console.error('Failed to load events from API:', err);
+        // Fallback: leave events empty (UI already shows placeholder)
+      }
+    }
+
+    const tabGen = document.getElementById("tab-generate");
+    const tabScan = document.getElementById("tab-scan");
+    const panelGen = document.getElementById("panel-generate");
+    const panelScan = document.getElementById("panel-scan");
+    const qrcodeDiv = document.getElementById("qrcode");
+    const qrText = document.getElementById("qrText");
+    const eventInfo = document.getElementById("eventInfo");
+    const qrContainer = document.getElementById("qrContainer");
+    const qrPlaceholder = document.getElementById("qrPlaceholder");
+    const eventSelect = document.getElementById("eventSelect");
+    const btnDownload = document.getElementById("btnDownloadQR");
+
+    let currentQR = "";
+    let currentEvent = null;
+    let qrcodeInstance = null;
+
+    // Load events into select dropdown
+    function loadEvents() {
+      console.log('Loading events...', events);
+      
+      // Clear existing options except the first one
+      while (eventSelect.options.length > 1) {
+        eventSelect.remove(1);
+      }
+      
+      events.forEach(event => {
+        const option = document.createElement('option');
+        option.value = event.id;
+        option.textContent = `${event.title} - ${event.date} ${event.time}`;
+        eventSelect.appendChild(option);
+        console.log('Added event:', event.title);
+      });
+      
+      console.log('Total events loaded:', events.length);
+    }
+
+    function switchTab(tab) {
+      if (tab === "generate") {
+        tabGen.classList.add("tab-active");
+        tabGen.classList.remove("tab-inactive");
+        tabScan.classList.add("tab-inactive");
+        tabScan.classList.remove("tab-active");
+        panelGen.classList.remove("hidden");
+        panelScan.classList.add("hidden");
+      } else {
+        tabScan.classList.add("tab-active");
+        tabScan.classList.remove("tab-inactive");
+        tabGen.classList.add("tab-inactive");
+        tabGen.classList.remove("tab-active");
+        panelGen.classList.add("hidden");
+        panelScan.classList.remove("hidden");
+        startScanner();
+      }
+      lucide.createIcons();
+    }
+
+    tabGen.addEventListener("click", () => switchTab("generate"));
+    tabScan.addEventListener("click", () => switchTab("scan"));
+
+    // --- QR Generate ---
+    function generateQR(eventId) {
+      console.log('Generating QR for event:', eventId);
+      currentEvent = events.find(e => e.id === eventId);
+      if (!currentEvent) {
+        console.error('Event not found:', eventId);
+        return;
+      }
+
+      // Create QR data in format: eventId|checkin|timestamp
+      const timestamp = Date.now();
+      const qrData = `${eventId}|checkin|${timestamp}`;
+      
+      // Get current domain or use localhost for development
+      const baseUrl = window.location.origin;
+      const studentLoginUrl = `${baseUrl}/StudentQRLogin.html?qr=${encodeURIComponent(qrData)}`;
+      
+      console.log('QR URL:', studentLoginUrl);
+      
+      currentQR = studentLoginUrl;
+      qrText.textContent = `${studentLoginUrl}`;
+      eventInfo.textContent = `${currentEvent.title} - ${currentEvent.date} ${currentEvent.time}`;
+      
+      // Show QR container, hide placeholder
+      qrPlaceholder.classList.add("hidden");
+      qrContainer.classList.remove("hidden");
+      
+      // Clear previous QR code
+      qrcodeDiv.innerHTML = '';
+      
+      // Check if QRCode library is available
+      if (typeof QRCode === 'undefined') {
+        console.error('QRCode library not available');
+        qrcodeDiv.innerHTML = '<p class="text-red-600 p-4">Lỗi: Không thể tạo mã QR. Vui lòng refresh trang.</p>';
+        return;
+      }
+      
+      try {
+        // Create new QR code instance using QRCodeJS
+        qrcodeInstance = new QRCode(qrcodeDiv, {
+          text: studentLoginUrl,
+          width: 300,
+          height: 300,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        console.log('✅ QR Code generated successfully!');
+      } catch (error) {
+        console.error('Error generating QR:', error);
+        qrcodeDiv.innerHTML = '<p class="text-red-600 p-4">Lỗi: ' + error.message + '</p>';
+      }
+      
+      lucide.createIcons();
+    }
+
+    // Event selection change handler
+    eventSelect.addEventListener("change", (e) => {
+      const selectedEventId = e.target.value;
+      if (selectedEventId) {
+        generateQR(selectedEventId);
+      } else {
+        qrContainer.classList.add("hidden");
+        qrPlaceholder.classList.remove("hidden");
+        lucide.createIcons();
+      }
+    });
+
+    btnDownload.addEventListener("click", () => {
+      if (!currentQR || !qrcodeInstance) return;
+      
+      // Get the canvas element from QRCodeJS (it creates a canvas inside the div)
+      const canvas = qrcodeDiv.querySelector('canvas');
+      if (!canvas) {
+        alert('Không tìm thấy mã QR để tải xuống');
+        return;
+      }
+      
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      const filename = currentEvent ? `QR_${currentEvent.title.replace(/\s+/g, '_')}_${currentEvent.date}.png` : "QR_Code.png";
+      a.download = filename;
+      a.click();
+    });
+
+    // --- QR Scan ---
+    const scanResult = document.getElementById("scan-result");
+    const btnStopScan = document.getElementById("btnStopScan");
+    let html5QrCode;
+
+    function startScanner() {
+      scanResult.textContent = "Đang khởi động camera...";
+      btnStopScan.classList.remove("hidden");
+      const qrReader = document.getElementById("qr-reader");
+      qrReader.innerHTML = "";
+      if (html5QrCode) html5QrCode.stop().catch(()=>{});
+      html5QrCode = new Html5Qrcode("qr-reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          scanResult.textContent = "✅ Đã quét thành công! Đang chuyển hướng...";
+          html5QrCode.stop().catch(()=>{});
+          btnStopScan.classList.add("hidden");
+          
+          // Check if the scanned text is a URL or QR data
+          if (decodedText.includes('StudentQRLogin.html')) {
+            // If it's a full URL, redirect to it
+            setTimeout(() => {
+              window.location.href = decodedText;
+            }, 1000);
+          } else {
+            // If it's just QR data, construct the URL
+            setTimeout(() => {
+              window.location.href = `StudentQRLogin.html?qr=${encodeURIComponent(decodedText)}`;
+            }, 1000);
+          }
+        },
+        (errorMessage) => {}
+      ).catch(err => {
+        scanResult.textContent = "❌ Không thể khởi động camera. Vui lòng kiểm tra quyền truy cập.";
+        console.error("Scanner error:", err);
+      });
+    }
+
+    btnStopScan.addEventListener("click", () => {
+      if (html5QrCode) html5QrCode.stop().catch(()=>{});
+      btnStopScan.classList.add("hidden");
+      scanResult.textContent = "Đã dừng quét.";
+    });
+
+  // Initialize
+  // If you want to test quickly without backend, re-add a small mock here. In prod we call the API.
+  loadEventsFromApi();
+  </script>
+</body>
+</html>

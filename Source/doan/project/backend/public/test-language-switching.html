@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Language Switching Logic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .test-section h2 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-vi {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-en {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #764ba2;
+        }
+
+        .status-value {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .log-container {
+            background: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: #2d2d2d;
+            border-radius: 10px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .log-lock { color: #f5576c; }
+        .log-storage { color: #f093fb; }
+        .log-service { color: #4facfe; }
+        .log-db { color: #00f2fe; }
+        .log-unlock { color: #90EE90; }
+        .log-error { color: #ff6b6b; background: #3d1f1f; }
+        .log-success { color: #51cf66; background: #1f3d1f; }
+
+        .demo-elements {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .demo-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .demo-item strong {
+            color: #764ba2;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        [data-translate] {
+            color: #667eea;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Language Switching</h1>
+        <p class="subtitle">Kiểm tra logic đổi ngôn ngữ 2 chiều</p>
+
+        <!-- Current Status -->
+        <div class="status">
+            <h2 style="color: #764ba2; margin-bottom: 15px;">📊 Current Status</h2>
+            <div class="status-item">
+                <span class="status-label">Current Language:</span>
+                <span class="status-value" id="currentLang">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">localStorage:</span>
+                <span class="status-value" id="localStorageLang">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Lock Status:</span>
+                <span class="status-value" id="lockStatus">🔓 Unlocked</span>
+            </div>
+        </div>
+
+        <!-- Test Buttons -->
+        <div class="test-section">
+            <h2>🎯 Test Actions</h2>
+            <div class="button-group">
+                <button class="btn-vi" onclick="testSwitch('vi')">
+                    🇻🇳 Switch to Vietnamese
+                </button>
+                <button class="btn-en" onclick="testSwitch('en')">
+                    🇬🇧 Switch to English
+                </button>
+            </div>
+        </div>
+
+        <!-- Demo Elements -->
+        <div class="test-section">
+            <h2>🔍 Test Elements (with data-translate)</h2>
+            <div class="demo-elements">
+                <div class="demo-item">
+                    <strong>Dashboard:</strong>
+                    <span data-translate="navigation.dashboard">Quản lý</span>
+                </div>
+                <div class="demo-item">
+                    <strong>Events:</strong>
+                    <span data-translate="navigation.events">Sự kiện</span>
+                </div>
+                <div class="demo-item">
+                    <strong>Messages:</strong>
+                    <span data-translate="navigation.messages">Tin nhắn</span>
+                </div>
+                <div class="demo-item">
+                    <strong>Contact:</strong>
+                    <span data-translate="navigation.contact">Liên hệ</span>
+                </div>
+                <div class="demo-item">
+                    <strong>Logout:</strong>
+                    <span data-translate="navigation.logout">Đăng xuất</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Console Log -->
+        <div class="test-section">
+            <h2>📝 Console Log</h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry log-success">✅ Ready to test language switching...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/language.js"></script>
+    <script>
+        // Update status display
+        function updateStatus() {
+            const currentLang = LanguageService.getCurrentLanguage();
+            const storedLang = localStorage.getItem('language');
+            
+            document.getElementById('currentLang').textContent = currentLang === 'vi' ? '🇻🇳 Tiếng Việt' : '🇬🇧 English';
+            document.getElementById('localStorageLang').textContent = storedLang || 'none';
+        }
+
+        // Add log entry
+        function addLog(message, type = '') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Test language switch
+        async function testSwitch(newLang) {
+            const oldLang = LanguageService.getCurrentLanguage();
+            
+            addLog(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'log-storage');
+            addLog(`🎯 TEST: ${oldLang.toUpperCase()} → ${newLang.toUpperCase()}`, 'log-storage');
+            addLog(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'log-storage');
+
+            if (oldLang === newLang) {
+                addLog(`⚠️ Already in ${newLang}`, 'log-error');
+                return;
+            }
+
+            // Check lock
+            if (window.isChangingLanguage) {
+                addLog(`🔒 Language change is LOCKED`, 'log-error');
+                document.getElementById('lockStatus').textContent = '🔒 Locked';
+                return;
+            }
+
+            try {
+                // Step 1: Lock
+                window.isChangingLanguage = true;
+                document.getElementById('lockStatus').textContent = '🔒 Locked';
+                addLog(`🔒 LOCK acquired`, 'log-lock');
+
+                // Step 2: Save to localStorage
+                localStorage.setItem('language', newLang);
+                addLog(`💾 localStorage.setItem('language', '${newLang}')`, 'log-storage');
+
+                // Step 3: Apply via LanguageService
+                addLog(`🎨 Calling LanguageService.setLanguage('${newLang}')`, 'log-service');
+                LanguageService.setLanguage(newLang);
+                addLog(`✅ LanguageService applied`, 'log-service');
+
+                // Check if elements updated
+                const testElement = document.querySelector('[data-translate="navigation.dashboard"]');
+                const expectedText = newLang === 'vi' ? 'Quản lý' : 'Dashboard';
+                
+                setTimeout(() => {
+                    if (testElement.textContent === expectedText) {
+                        addLog(`✅ Elements updated correctly: "${testElement.textContent}"`, 'log-success');
+                    } else {
+                        addLog(`❌ Element NOT updated! Expected "${expectedText}", got "${testElement.textContent}"`, 'log-error');
+                    }
+                }, 100);
+
+                // Step 4: Simulate database save
+                addLog(`🌐 Simulating database save...`, 'log-db');
+                // In real app: await fetch('/api/users/1/preferences', ...)
+                
+                // Step 5: Show success message
+                const successMessages = {
+                    'vi': '✅ Đã chuyển sang Tiếng Việt',
+                    'en': '✅ Changed to English'
+                };
+                addLog(successMessages[newLang], 'log-success');
+
+                // Update status
+                updateStatus();
+
+            } catch (error) {
+                addLog(`❌ ERROR: ${error.message}`, 'log-error');
+                
+                // Revert on error
+                localStorage.setItem('language', oldLang);
+                LanguageService.setLanguage(oldLang);
+                
+                const errorMessages = {
+                    'vi': '❌ Lỗi khi đổi ngôn ngữ',
+                    'en': '❌ Error changing language'
+                };
+                addLog(errorMessages[oldLang], 'log-error');
+                
+            } finally {
+                // Step 6: Unlock
+                setTimeout(() => {
+                    window.isChangingLanguage = false;
+                    document.getElementById('lockStatus').textContent = '🔓 Unlocked';
+                    addLog(`🔓 UNLOCK released`, 'log-unlock');
+                }, 500);
+            }
+        }
+
+        // Initialize
+        window.isChangingLanguage = false;
+        updateStatus();
+        
+        // Listen to language-changed event
+        document.addEventListener('language-changed', (e) => {
+            addLog(`🎉 Event: language-changed → ${e.detail.language}`, 'log-success');
+            updateStatus();
+        });
+
+        addLog(`🚀 Current language: ${LanguageService.getCurrentLanguage()}`, 'log-success');
+    </script>
+</body>
+</html>

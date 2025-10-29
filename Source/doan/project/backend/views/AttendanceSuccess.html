@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Điểm danh thành công!</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="/js/theme.js"></script>
+  <style>
+    .fade-in {
+      animation: fadeInUp 0.6s ease-out;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .success-checkmark {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto;
+    }
+    .check-icon {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      border-radius: 50%;
+      box-sizing: content-box;
+      border: 4px solid #4CAF50;
+      animation: scaleCheckmark 0.5s ease-in-out;
+    }
+    @keyframes scaleCheckmark {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    .check-icon::before {
+      top: 3px;
+      left: -2px;
+      width: 30px;
+      transform-origin: 100% 50%;
+      border-radius: 100px 0 0 100px;
+    }
+    .check-icon::after {
+      top: 0;
+      left: 30px;
+      width: 60px;
+      transform-origin: 0 50%;
+      border-radius: 0 100px 100px 0;
+      animation: rotateCircle 4.25s ease-in;
+    }
+    @keyframes rotateCircle {
+      0% { transform: rotate(-45deg); }
+      5% { transform: rotate(-45deg); }
+      12% { transform: rotate(-405deg); }
+      100% { transform: rotate(-405deg); }
+    }
+    .icon-line {
+      height: 5px;
+      background-color: #4CAF50;
+      display: block;
+      border-radius: 2px;
+      position: absolute;
+      z-index: 10;
+    }
+    .icon-line.line-tip {
+      top: 46px;
+      left: 14px;
+      width: 25px;
+      transform: rotate(45deg);
+      animation: iconLineTip 0.75s;
+    }
+    .icon-line.line-long {
+      top: 38px;
+      right: 8px;
+      width: 47px;
+      transform: rotate(-45deg);
+      animation: iconLineLong 0.75s;
+    }
+    @keyframes iconLineTip {
+      0% { width: 0; left: 1px; top: 19px; }
+      54% { width: 0; left: 1px; top: 19px; }
+      70% { width: 50px; left: -8px; top: 37px; }
+      84% { width: 17px; left: 21px; top: 48px; }
+      100% { width: 25px; left: 14px; top: 45px; }
+    }
+    @keyframes iconLineLong {
+      0% { width: 0; right: 46px; top: 54px; }
+      65% { width: 0; right: 46px; top: 54px; }
+      84% { width: 55px; right: 0px; top: 35px; }
+      100% { width: 47px; right: 8px; top: 38px; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center p-4">
+  <div class="max-w-md w-full">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center fade-in">
+      <!-- Success Animation -->
+      <div class="success-checkmark mb-6">
+        <div class="check-icon">
+          <span class="icon-line line-tip"></span>
+          <span class="icon-line line-long"></span>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-3xl font-bold text-gray-800 mb-3">
+        Điểm danh thành công!
+      </h1>
+
+      <!-- Event Info -->
+      <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 mb-6">
+        <div class="text-left space-y-3">
+          <div class="flex items-center text-gray-700">
+            <i data-lucide="check-circle" class="w-5 h-5 mr-3 text-green-500"></i>
+            <div>
+              <p class="text-sm text-gray-500">Sự kiện</p>
+              <p id="eventName" class="font-semibold">Đang tải...</p>
+            </div>
+          </div>
+          <div class="flex items-center text-gray-700">
+            <i data-lucide="calendar" class="w-5 h-5 mr-3 text-blue-500"></i>
+            <div>
+              <p class="text-sm text-gray-500">Ngày & Giờ</p>
+              <p id="eventDateTime" class="font-semibold">Đang tải...</p>
+            </div>
+          </div>
+          <div class="flex items-center text-gray-700">
+            <i data-lucide="map-pin" class="w-5 h-5 mr-3 text-red-500"></i>
+            <div>
+              <p class="text-sm text-gray-500">Địa điểm</p>
+              <p id="eventLocation" class="font-semibold">Đang tải...</p>
+            </div>
+          </div>
+          <div class="flex items-center text-gray-700">
+            <i data-lucide="user" class="w-5 h-5 mr-3 text-purple-500"></i>
+            <div>
+              <p class="text-sm text-gray-500">Người điểm danh</p>
+              <p id="userName" class="font-semibold">Đang tải...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message -->
+      <p class="text-gray-600 mb-6">
+        Cảm ơn bạn đã tham gia sự kiện! Thông tin điểm danh của bạn đã được ghi nhận.
+      </p>
+
+      <!-- Buttons -->
+      <div class="space-y-3">
+        <a href="/EventList.html" 
+           class="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
+          <i data-lucide="list" class="w-5 h-5 inline mr-2"></i>
+          Xem danh sách sự kiện
+        </a>
+        <a href="/" 
+           class="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+          <i data-lucide="home" class="w-5 h-5 inline mr-2"></i>
+          Về trang chủ
+        </a>
+      </div>
+
+      <!-- Footer Note -->
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <p class="text-sm text-gray-500">
+          <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+          Nếu có thắc mắc, vui lòng liên hệ Ban tổ chức
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Get event data from localStorage or URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get('eventId');
+    const userId = urlParams.get('userId');
+
+    // Mock events data (same as in other pages)
+    const events = [
+      { id: 'e1', title: 'Hội thảo Trí tuệ Nhân tạo', date: '2025-10-18', time: '08:00', location: 'Hội trường A' },
+      { id: 'e2', title: 'Giao lưu Tân sinh viên 2025', date: '2025-10-20', time: '14:00', location: 'Sân trường' },
+      { id: 'e3', title: 'Workshop Kỹ năng', date: '2025-10-25', time: '09:00', location: 'Phòng B101' },
+      { id: 'e4', title: 'Hội nghị Khoa học', date: '2025-11-01', time: '13:00', location: 'Hội trường B' },
+      { id: 'e5', title: 'Seminar Khởi nghiệp Sinh viên', date: '2025-11-05', time: '15:00', location: 'Phòng C201' },
+      { id: 'e6', title: 'Ngày hội Việc làm', date: '2025-11-10', time: '08:30', location: 'Nhà thi đấu' }
+    ];
+
+    const users = [
+      { id: '1', name: 'Nguyễn Văn An', email: 'student@school.edu' },
+      { id: '2', name: 'Trần Thị Bảo', email: 'student2@school.edu' },
+      { id: '3', name: 'Lê Văn Cảnh', email: 'student3@school.edu' }
+    ];
+
+    // Display event information
+    function displayEventInfo() {
+      const event = events.find(e => e.id === eventId);
+      const user = users.find(u => u.id === userId);
+
+      if (event) {
+        document.getElementById('eventName').textContent = event.title;
+        document.getElementById('eventDateTime').textContent = `${event.date} - ${event.time}`;
+        document.getElementById('eventLocation').textContent = event.location;
+      } else {
+        // Fallback: try to get from localStorage
+        try {
+          const attendance = JSON.parse(localStorage.getItem('attendance_records') || '[]');
+          const lastAttendance = attendance[attendance.length - 1];
+          if (lastAttendance) {
+            const lastEvent = events.find(e => e.id === lastAttendance.eventId);
+            if (lastEvent) {
+              document.getElementById('eventName').textContent = lastEvent.title;
+              document.getElementById('eventDateTime').textContent = `${lastEvent.date} - ${lastEvent.time}`;
+              document.getElementById('eventLocation').textContent = lastEvent.location;
+            }
+          }
+        } catch (e) {
+          document.getElementById('eventName').textContent = 'Sự kiện';
+        }
+      }
+
+      if (user) {
+        document.getElementById('userName').textContent = user.name;
+      } else {
+        // Try to get from localStorage
+        const storedEmail = localStorage.getItem('userEmail');
+        if (storedEmail) {
+          const storedUser = users.find(u => u.email === storedEmail);
+          if (storedUser) {
+            document.getElementById('userName').textContent = storedUser.name;
+          }
+        } else {
+          document.getElementById('userName').textContent = 'Sinh viên';
+        }
+      }
+    }
+
+    // Initialize
+    lucide.createIcons();
+    displayEventInfo();
+
+    // Auto redirect after 10 seconds
+    setTimeout(() => {
+      if (confirm('Bạn có muốn xem danh sách sự kiện khác?')) {
+        window.location.href = '/EventList.html';
+      }
+    }, 10000);
+  </script>
+</body>
+</html>

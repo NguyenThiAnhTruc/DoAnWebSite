@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Điểm danh QR • SchoolEvents</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+    .toast.show{opacity:1;pointer-events:auto}
+    .fade-up{opacity:0;transform:translateY(20px);animation:fadeUp .5s ease forwards}
+    @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+
+  <div id="toast" class="toast"></div>
+
+  <!-- Success Screen -->
+  <div id="successView" class="hidden w-full max-w-md">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full text-center">
+      <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <!-- CheckCircle -->
+        <svg class="w-12 h-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+        </svg>
+      </div>
+      <h1 class="text-2xl font-bold text-gray-900 mb-4">Điểm danh thành công! ✅</h1>
+      <div class="bg-green-50 rounded-lg p-4 mb-6 text-left">
+        <p id="succTitle" class="text-green-800 font-medium"></p>
+        <p id="succTime" class="text-green-700 text-sm mt-1"></p>
+        <p id="succLoc" class="text-green-700 text-sm"></p>
+      </div>
+      <div class="grid gap-3">
+        <a href="/" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors font-medium">Về trang chủ</a>
+        <button id="btnCloseSuccess" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors font-medium">Đóng trang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main (Login + Event Info) -->
+  <div id="mainView" class="w-full max-w-md">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 w-full">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <!-- LogIn icon -->
+          <svg class="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 16l-6-6m0 0l6-6m-6 6h12"/>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Điểm danh sự kiện</h1>
+        <p class="text-gray-600">Đăng nhập tài khoản để điểm danh sự kiện</p>
+      </div>
+
+      <!-- Event Info -->
+      <div id="eventInfo" class="hidden bg-blue-50 rounded-lg p-4 mb-6">
+        <h3 id="evTitle" class="font-semibold text-blue-900 mb-2"></h3>
+        <div class="space-y-1 text-sm text-blue-700">
+          <div class="flex items-center gap-2">
+            <!-- Calendar -->
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2h-2M7 5H5a2 2 0 00-2 2v12a2 2 0 002 2" />
+            </svg>
+            <span id="evDate"></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Clock -->
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/>
+            </svg>
+            <span id="evTime"></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- MapPin -->
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5 9 6.343 9 8s1.343 3 3 3zm0 0c-5 0-8 3.5-8 7v1h16v-1c0-3.5-3-7-8-7z"/>
+            </svg>
+            <span id="evLoc"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="space-y-4" novalidate>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Email tài khoản</label>
+          <input id="email" type="email" placeholder="student@school.edu"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 required />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+          <div class="relative">
+            <input id="password" type="password" placeholder="••••••••"
+                   class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   required />
+            <button type="button" id="togglePassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    aria-label="Hiện/ẩn mật khẩu">
+              <!-- Eye open -->
+              <svg id="eyeOpen" class="w-5 h-5 block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                <circle cx="12" cy="12" r="3" stroke-width="2" stroke="currentColor" fill="none"/>
+              </svg>
+              <!-- Eye off -->
+              <svg id="eyeOff" class="w-5 h-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13.875 18.825A10.05 10.05 0 0112 19C7.523 19 3.732 16.057 2.458 12a10.003 10.003 0 012.221-3.568m3.213-2.227A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.97 9.97 0 01-1.257 2.31M15 12a3 3 0 00-3-3m0 0a3 3 0 013 3m-3-3L3 21"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button id="submitBtn" type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-4 rounded-lg transition-colors font-medium flex items-center justify-center gap-2">
+          <span id="btnLabel" class="inline-flex items-center">
+            <!-- LogIn icon -->
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 16l-6-6m0 0l6-6m-6 6h12"/>
+            </svg>
+            Đăng nhập và điểm danh
+          </span>
+          <span id="btnSpinner" class="hidden w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+        </button>
+      </form>
+
+      <!-- Demo accounts -->
+      <div class="mt-6 p-4 bg-gray-50 rounded-lg">
+        <p class="text-sm font-medium text-gray-700 mb-2">Tài khoản demo:</p>
+        <div class="text-xs text-gray-600 space-y-1">
+          <p>• student@school.edu / 123456</p>
+          <p>• student2@school.edu / 123456</p>
+          <p>• student3@school.edu / 123456</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/theme.js"></script>
+  <script>
+    // ===== Helpers =====
+    const $ = s => document.querySelector(s);
+    const toastEl = $('#toast');
+    function toast(msg, type='info', t=2200){
+      toastEl.textContent = msg;
+      toastEl.style.background = type==='error' ? '#DC2626' : type==='success' ? '#16A34A' : '#111827';
+      toastEl.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(()=>toastEl.classList.remove('show'), t);
+    }
+    function fmtDate(d){ return new Date(d).toLocaleDateString('vi-VN'); }
+
+    // ===== Seed demo data if missing =====
+    (function seed(){
+      const users = JSON.parse(localStorage.getItem('users')||'[]');
+      if(!users.length){
+        const demo = [
+          {id:'U1',email:'student@school.edu',password:'123456',name:'Sinh Viên 1',role:'sinh_vien'},
+          {id:'U2',email:'student2@school.edu',password:'123456',name:'Sinh Viên 2',role:'sinh_vien'},
+          {id:'U3',email:'student3@school.edu',password:'123456',name:'Sinh Viên 3',role:'sinh_vien'}
+        ];
+        localStorage.setItem('users', JSON.stringify(demo));
+      }
+      const events = JSON.parse(localStorage.getItem('events')||'[]');
+      if(!events.length){
+        const now = new Date();
+        const sample = [{
+          id:'EVT001',
+          title:'Chào mừng Tân sinh viên',
+          date:new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(),
+          time:'08:00 - 10:00',
+          location:'Hội trường A'
+        }];
+        localStorage.setItem('events', JSON.stringify(sample));
+      }
+      if(!localStorage.getItem('registrations')){
+        localStorage.setItem('registrations', '[]');
+      }
+    })();
+
+    // ===== Read URL param eventId =====
+    const url = new URL(window.location.href);
+    const eventId = url.searchParams.get('eventId');
+
+    // ===== Load event info =====
+    const events = JSON.parse(localStorage.getItem('events')||'[]');
+    const event = events.find(e => e.id === eventId) || null;
+    if(event){
+      $('#eventInfo').classList.remove('hidden');
+      $('#evTitle').textContent = event.title;
+      $('#evDate').textContent  = fmtDate(event.date);
+      $('#evTime').textContent  = event.time;
+      $('#evLoc').textContent   = event.location;
+    } else {
+      if(eventId){ toast('Sự kiện không tồn tại!', 'error', 2600); }
+    }
+
+    // ===== Toggle password =====
+    $('#togglePassword').addEventListener('click', ()=>{
+      const pwd = $('#password');
+      const isText = pwd.type === 'text';
+      pwd.type = isText ? 'password' : 'text';
+      $('#eyeOpen').classList.toggle('hidden', !isText);
+      $('#eyeOff').classList.toggle('hidden', isText);
+    });
+
+    // ===== Login + Auto register + Check attendance + Mark attendance =====
+    $('#loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const email = $('#email').value.trim();
+      const password = $('#password').value;
+
+      if(!email || !password){
+        toast('Vui lòng nhập đầy đủ email và mật khẩu!', 'error'); return;
+      }
+
+      const submitBtn = $('#submitBtn');
+      const btnLabel = $('#btnLabel');
+      const btnSpinner = $('#btnSpinner');
+      submitBtn.disabled = true; btnLabel.classList.add('hidden'); btnSpinner.classList.remove('hidden');
+
+      try{
+        // === Login demo (có thể thay bằng fetch('/api/auth/login') ) ===
+        const users = JSON.parse(localStorage.getItem('users')||'[]');
+        const user = users.find(u=>u.email===email && u.password===password);
+        if(!user){ throw new Error('Email hoặc mật khẩu không đúng!'); }
+
+        // Lưu currentUser
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        // === Auto-register to event if not yet ===
+        if(eventId){
+          const regs = JSON.parse(localStorage.getItem('registrations')||'[]');
+          const isRegistered = regs.some(r => r.eventId===eventId && r.userId===user.id);
+          if(!isRegistered){
+            regs.push({
+              eventId,
+              userId: user.id,
+              userName: user.name,
+              userEmail: user.email,
+              userPhone: user.phone || '',
+              studentId: user.studentId || ''
+            });
+            localStorage.setItem('registrations', JSON.stringify(regs));
+            toast('Đã tự động đăng ký tham gia sự kiện!', 'success');
+          }
+
+          // === Check already attendance ===
+          const key = 'attendance_'+eventId;
+          const att = JSON.parse(localStorage.getItem(key)||'[]');
+          const already = att.some(a => a.userId === user.id);
+          if(already){ throw new Error('Bạn đã điểm danh cho sự kiện này rồi!'); }
+
+          // === Mark attendance ===
+          att.push({
+            userId: user.id,
+            status: 'present',
+            note: 'Điểm danh QR - ' + new Date().toLocaleString('vi-VN'),
+            ts: new Date().toISOString()
+          });
+          localStorage.setItem(key, JSON.stringify(att));
+        }
+
+        // Show success
+        if(event){
+          $('#succTitle').textContent = event.title;
+          $('#succTime').textContent  = 'Thời gian: ' + fmtDate(event.date) + ' • ' + event.time;
+          $('#succLoc').textContent   = 'Địa điểm: ' + event.location;
+        }
+        $('#mainView').classList.add('hidden');
+        $('#successView').classList.remove('hidden');
+        toast('Điểm danh thành công!', 'success');
+
+      } catch(err){
+        toast(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin!', 'error', 2600);
+      } finally{
+        submitBtn.disabled = false; btnLabel.classList.remove('hidden'); btnSpinner.classList.add('hidden');
+      }
+    });
+
+    $('#btnCloseSuccess').addEventListener('click', ()=> window.close());
+  </script>
+</body>
+</html>

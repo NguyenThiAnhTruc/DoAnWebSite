@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SchoolEvents • Trang chủ</title>
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <style>
+    .fade-up{opacity:0;transform:translateY(24px);animation:fadeUp .6s ease forwards}
+    @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+    .pulse-dot{animation:pulse 1.5s infinite}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.6}}
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+  <!-- NAV -->
+  <nav class="bg-white dark:bg-gray-800/80 backdrop-blur-md shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center space-x-3 fade-up">
+          <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-12 h-12 object-contain rounded-full">
+          <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            SchoolEvents
+          </span>
+        </div>
+        <div class="flex items-center space-x-4 fade-up" style="animation-delay:.1s">
+          <a href="Login.html" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-blue-50">Đăng nhập</a>
+          <a href="Register.html" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all hover:scale-105">Đăng ký</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="py-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div class="fade-up">
+        <h1 class="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white dark:text-white mb-6">
+          Quản lý <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">sự kiện trường học</span> hiệu quả
+        </h1>
+        <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+          Nền tảng quản lý sự kiện hiện đại giúp sinh viên dễ dàng tìm kiếm, đăng ký và theo dõi các hoạt động học tập, văn hóa tại trường.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="Login.html" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-xl transition-all inline-flex items-center justify-center">
+            Bắt đầu ngay
+            <svg class="w-5 h-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+          </a>
+          <a href="#" class="border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-8 py-4 rounded-xl text-lg font-semibold hover:border-blue-500 hover:text-blue-600 transition-all inline-flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polygon points="5,3 19,12 5,21 5,3" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>
+            Xem demo
+          </a>
+        </div>
+      </div>
+
+      <!-- Upcoming card -->
+      <div class="relative fade-up" style="animation-delay:.1s">
+        <div class="relative z-10 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white">Sự kiện sắp tới</h3>
+            <div class="w-3 h-3 bg-green-500 rounded-full pulse-dot"></div>
+          </div>
+          <div id="upcomingList" class="space-y-4">
+            <!-- JS render top-3 upcoming here -->
+          </div>
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl transform rotate-6 scale-105 opacity-20"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-500 rounded-2xl transform -rotate-3 scale-110 opacity-10"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="py-20 bg-white dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16 fade-up">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white dark:text-white mb-4">Tại sao chọn SchoolEvents?</h2>
+        <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          Chúng tôi mang đến giải pháp quản lý sự kiện toàn diện với những tính năng vượt trội
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- Feature 1 -->
+        <div class="text-center group fade-up">
+          <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+            <!-- Calendar -->
+            <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2h-2M7 5H5a2 2 0 00-2 2v12a2 2 0 002 2"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white dark:text-white mb-3">Quản lý sự kiện</h3>
+          <p class="text-gray-600 dark:text-gray-300">Xem và đăng ký các sự kiện trường học một cách dễ dàng</p>
+        </div>
+        <!-- Feature 2 -->
+        <div class="text-center group fade-up" style="animation-delay:.05s">
+          <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+            <!-- Users -->
+            <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 000 7.75"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white dark:text-white mb-3">Cộng đồng sinh viên</h3>
+          <p class="text-gray-600 dark:text-gray-300">Kết nối và tham gia cùng hàng ngàn sinh viên khác</p>
+        </div>
+        <!-- Feature 3 -->
+        <div class="text-center group fade-up" style="animation-delay:.1s">
+          <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+            <!-- Bell -->
+            <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white dark:text-white mb-3">Thông báo thông minh</h3>
+          <p class="text-gray-600 dark:text-gray-300">Nhận nhắc nhở và cập nhật về các sự kiện quan trọng</p>
+        </div>
+        <!-- Feature 4 -->
+        <div class="text-center group fade-up" style="animation-delay:.15s">
+          <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+            <!-- Star -->
+            <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9 12 2" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white dark:text-white mb-3">Trải nghiệm tuyệt vời</h3>
+          <p class="text-gray-600 dark:text-gray-300">Giao diện hiện đại và thân thiện với người dùng</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTS PREVIEW -->
+  <section class="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16 fade-up">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white dark:text-white mb-4">Sự kiện nổi bật</h2>
+        <p class="text-xl text-gray-600 dark:text-gray-300">Khám phá những sự kiện thú vị đang diễn ra tại trường</p>
+      </div>
+
+      <div id="featuredGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- JS render top-3 upcoming cards -->
+      </div>
+
+      <div class="text-center mt-12 fade-up" style="animation-delay:.1s">
+        <a href="Login.html" class="inline-flex items-center bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-xl transition-all">
+          Xem tất cả sự kiện
+          <svg class="w-5 h-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center space-x-3 mb-4">
+            <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-12 h-12 object-contain rounded-full">
+            <span class="text-xl font-bold">SchoolEvents</span>
+          </div>
+          <p class="text-gray-400">Nền tảng quản lý sự kiện trường học hiện đại và hiệu quả nhất.</p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Liên kết</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white transition-colors">Về chúng tôi</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Sự kiện</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Liên hệ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Hỗ trợ</h3>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-white transition-colors">Trung tâm trợ giúp</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">Hướng dẫn sử dụng</a></li>
+            <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Liên hệ</h3>
+          <p class="text-gray-400">
+            Email: 2212440@schoolevents.edu<br />
+            Điện thoại: (084) 42153967<br />
+            Địa chỉ: 95 Lý Nam Đế, Phường 8, Thành phố Đà Lạt, Lâm Đồng
+          </p>
+        </div>
+      </div>
+      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <p>&copy; 2025 SchoolEvents. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Fetch upcoming events from API (similar to EventList.html)
+    let upcomingEvents = [];
+    let featuredEvents = [];
+    let allEventsCache = [];
+
+    async function fetchUpcomingEvents() {
+      try {
+        // Fetch all events without Status filter (similar to EventList)
+        const params = new URLSearchParams();
+        params.set('PageSize', '50');
+        
+        const url = '/api/events?' + params.toString();
+        console.log('Fetching from:', url);
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log('API Response:', data);
+        
+        // Normalize response (same as EventList)
+        let list = [];
+        if (Array.isArray(data)) list = data;
+        else if (data.events) list = data.events;
+        else if (data.data && Array.isArray(data.data)) list = data.data;
+        else if (data.rows) list = data.rows;
+        else list = [];
+        
+        console.log('Total events received:', list.length);
+        
+        if (list.length > 0) {
+          allEventsCache = list;
+          
+          // Filter upcoming events (status = upcoming or published, start_date in future)
+          const now = new Date();
+          const upcomingList = list.filter(ev => {
+            const status = (ev.status || '').toLowerCase();
+            const startDate = new Date(ev.start_date || ev.date);
+            return (status === 'upcoming' || status === 'published') && startDate > now;
+          }).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+          
+          console.log('Filtered upcoming events:', upcomingList.length);
+          
+          upcomingEvents = upcomingList.slice(0, 3); // Take first 3 for hero card
+          
+          // Featured events: sort by participants (most popular first)
+          featuredEvents = [...upcomingList]
+            .sort((a, b) => (b.current_participants || 0) - (a.current_participants || 0))
+            .slice(0, 6); // Take top 6 most popular
+            
+          console.log('Featured events:', featuredEvents.map(e => ({title: e.title, participants: e.current_participants})));
+        } else {
+          console.log('No events received from API, loading demo data');
+          loadDemoData();
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        loadDemoData();
+      }
+      
+      renderUpcomingList();
+      renderFeatured();
+    }
+
+    function loadDemoData() {
+      const today = new Date();
+      const dPlus = (days) => {
+        const d = new Date(today);
+        d.setDate(d.getDate() + days);
+        return d.toISOString().slice(0,10);
+      };
+
+      const allEvents = [
+        {
+          event_id:'E001',
+          title:'Chào mừng Tân sinh viên 2025',
+          start_date:dPlus(2),
+          location:'Hội trường A',
+          image_url:'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=800&h=400&fit=crop',
+          category:'Lễ hội',
+          description:'Sự kiện giới thiệu dành cho tân sinh viên.',
+          current_participants:120,
+          max_participants:300
+        },
+        {
+          event_id:'E002',
+          title:'Workshop Kỹ năng Thuyết trình',
+          start_date:dPlus(5),
+          location:'Phòng B204',
+          image_url:'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&h=400&fit=crop',
+          category:'Workshop',
+          description:'Rèn luyện kỹ năng nói trước đám đông.',
+          current_participants:80,
+          max_participants:120
+        },
+        {
+          event_id:'E003',
+          title:'Giải chạy tiếp sức Khoa CNTT',
+          start_date:dPlus(9),
+          location:'Sân vận động',
+          image_url:'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=400&fit=crop',
+          category:'Thể thao',
+          description:'Sự kiện thể thao thường niên kết nối các lớp.',
+          current_participants:45,
+          max_participants:100
+        }
+      ];
+      
+      upcomingEvents = allEvents.slice(0, 3);
+      featuredEvents = [...allEvents].sort((a, b) => (b.current_participants || 0) - (a.current_participants || 0));
+    }
+
+    function el(tag, cls, html){ 
+      const x = document.createElement(tag); 
+      if(cls) x.className = cls; 
+      if(html !== undefined) x.innerHTML = html; 
+      return x; 
+    }
+
+    function renderUpcomingList(){
+      const list = document.getElementById('upcomingList');
+      if (!list) return;
+      list.innerHTML = '';
+      
+      upcomingEvents.forEach((event, idx) => {
+        const row = el('div','flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900 transition-colors fade-up');
+        row.style.animationDelay = (0.2 + idx*0.05) + 's';
+
+        const img = el('img','w-12 h-12 rounded-lg object-cover');
+        img.src = event.image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=150&h=150&fit=crop';
+        img.alt = event.title;
+
+        const info = el('div','flex-1');
+        info.appendChild(el('p','font-medium text-gray-900 dark:text-white dark:text-white text-sm', event.title));
+        info.appendChild(el('p','text-xs text-gray-500 dark:text-gray-400', `${event.start_date || ''} • ${event.location}`));
+
+        row.appendChild(img);
+        row.appendChild(info);
+        list.appendChild(row);
+      });
+    }
+
+    function renderFeatured(){
+      const wrap = document.getElementById('featuredGrid');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      
+      featuredEvents.forEach((event, idx) => {
+        const card = el('div','bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden group hover:shadow-2xl transition-all transform hover:scale-105 fade-up');
+        card.style.animationDelay = (0.05 + idx*0.05) + 's';
+
+        const top = el('div','relative');
+        const img = el('img','w-full h-48 object-cover');
+        img.src = event.image_url || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop';
+        img.alt = event.title;
+        const badge = el('div','absolute top-4 left-4 bg-white dark:bg-gray-800/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium text-blue-600', event.category || 'Sự kiện');
+
+        top.appendChild(img); 
+        top.appendChild(badge);
+
+        const body = el('div','p-6');
+        body.appendChild(el('h3','text-xl font-semibold text-gray-900 dark:text-white dark:text-white mb-2 group-hover:text-blue-600 transition-colors', event.title));
+        body.appendChild(el('p','text-gray-600 dark:text-gray-300 mb-4', event.description || event.short_description || ''));
+        
+        const meta = el('div','flex items-center justify-between text-sm text-gray-500 dark:text-gray-400');
+        const dateStr = event.start_date || 'TBA';
+        const currentPart = event.current_participants || 0;
+        const maxPart = event.max_participants || 0;
+        meta.appendChild(el('span','', dateStr));
+        meta.appendChild(el('span','', `${currentPart}/${maxPart} đã đăng ký`));
+        body.appendChild(meta);
+
+        card.appendChild(top); 
+        card.appendChild(body);
+        wrap.appendChild(card);
+      });
+    }
+
+    // Fetch when page loads
+    fetchUpcomingEvents();
+  </script>
+  <script>
+    // ===== OLD CODE - DISABLED (sử dụng API thay vì localStorage) =====
+    /*
+    // ===== Demo data loader (thay thế useEvents + filter status='upcoming' + slice(0,3)) =====
+    (function seedIfNeeded(){
+      const existing = JSON.parse(localStorage.getItem('events')||'[]');
+      if (existing.length) return;
+
+      const today = new Date();
+      function dPlus(days){ const d=new Date(today); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+
+      const demo = [
+        {
+          id:'E001',
+          title:'Chào mừng Tân sinh viên 2025',
+          date:dPlus(2),
+          location:'Hội trường A',
+          image:'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=800&h=400&fit=crop',
+          category:'Lễ hội',
+          description:'Sự kiện giới thiệu dành cho tân sinh viên, gặp gỡ câu lạc bộ và ban chủ nhiệm.',
+          currentParticipants:120,
+          maxParticipants:300,
+          status:'upcoming'
+        },
+        {
+          id:'E002',
+          title:'Workshop Kỹ năng Thuyết trình',
+          date:dPlus(5),
+          location:'Phòng B204',
+          image:'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&h=400&fit=crop',
+          category:'Workshop',
+          description:'Rèn luyện kỹ năng nói trước đám đông với chuyên gia đào tạo.',
+          currentParticipants:80,
+          maxParticipants:120,
+          status:'upcoming'
+        },
+        {
+          id:'E003',
+          title:'Giải chạy tiếp sức Khoa CNTT',
+          date:dPlus(9),
+          location:'Sân vận động',
+          image:'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=400&fit=crop',
+          category:'Thể thao',
+          description:'Sự kiện thể thao thường niên kết nối các lớp trong khoa.',
+          currentParticipants:45,
+          maxParticipants:100,
+          status:'upcoming'
+        },
+        {
+          id:'E004',
+          title:'Seminar AI trong Giáo dục',
+          date:dPlus(-3),
+          location:'Hội trường B',
+          image:'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop',
+          category:'Seminar',
+          description:'Chia sẻ xu hướng ứng dụng AI vào lớp học thông minh.',
+          currentParticipants:200,
+          maxParticipants:200,
+          status:'finished'
+        }
+      ];
+      localStorage.setItem('events', JSON.stringify(demo));
+    })();
+
+    function getUpcomingTop3(){
+      const events = JSON.parse(localStorage.getItem('events')||'[]');
+      return events.filter(e => e.status === 'upcoming').slice(0,3);
+    }
+
+    function el(tag, cls, html){ const x=document.createElement(tag); if(cls) x.className=cls; if(html!==undefined) x.innerHTML=html; return x; }
+
+    // Render “Sự kiện sắp tới” (card phải)
+    (function renderUpcomingList(){
+      const list = document.getElementById('upcomingList');
+      list.innerHTML = '';
+      const items = getUpcomingTop3();
+      items.forEach((event, idx) => {
+        const row = el('div','flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900 transition-colors fade-up');
+        row.style.animationDelay = (0.2 + idx*0.05) + 's';
+
+        const img = el('img','w-12 h-12 rounded-lg object-cover');
+        img.src = event.image; img.alt = event.title;
+
+        const info = el('div','flex-1');
+        info.appendChild(el('p','font-medium text-gray-900 dark:text-white dark:text-white text-sm', event.title));
+        info.appendChild(el('p','text-xs text-gray-500 dark:text-gray-400', `${event.date} • ${event.location}`));
+
+        row.appendChild(img);
+        row.appendChild(info);
+        list.appendChild(row);
+      });
+    })();
+
+    // Render “Sự kiện nổi bật” (grid 3 card)
+    (function renderFeatured(){
+      const wrap = document.getElementById('featuredGrid');
+      wrap.innerHTML = '';
+      const items = getUpcomingTop3();
+      items.forEach((event, idx) => {
+        const card = el('div','bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden group hover:shadow-2xl transition-all transform hover:scale-105 fade-up');
+        card.style.animationDelay = (0.05 + idx*0.05) + 's';
+
+        const top = el('div','relative');
+        const img = el('img','w-full h-48 object-cover'); img.src = event.image; img.alt = event.title;
+        const badge = el('div','absolute top-4 left-4 bg-white dark:bg-gray-800/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium text-blue-600', event.category);
+
+        top.appendChild(img); top.appendChild(badge);
+
+        const body = el('div','p-6');
+        body.appendChild(el('h3','text-xl font-semibold text-gray-900 dark:text-white dark:text-white mb-2 group-hover:text-blue-600 transition-colors', event.title));
+        body.appendChild(el('p','text-gray-600 dark:text-gray-300 mb-4', event.description));
+        const meta = el('div','flex items-center justify-between text-sm text-gray-500 dark:text-gray-400');
+        meta.appendChild(el('span','', event.date));
+        meta.appendChild(el('span','', `${event.currentParticipants}/${event.maxParticipants} đã đăng ký`));
+        body.appendChild(meta);
+
+        card.appendChild(top); card.appendChild(body);
+        wrap.appendChild(card);
+      });
+    })();
+    */ 
+    // ===== END OLD CODE =====
+  </script>
+
+  <!-- AOS Animations -->
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>
+    // Initialize AOS
+    AOS.init({
+      duration: 800,
+      once: true
+    });
+
+    // Thêm dark mode toggle
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+
+    // Handle registration button animation
+    const registerBtn = document.querySelector('a[href="Register.html"]');
+    registerBtn.addEventListener('mouseenter', () => {
+      registerBtn.style.transform = 'translateY(-2px)';
+    });
+    registerBtn.addEventListener('mouseleave', () => {
+      registerBtn.style.transform = 'translateY(0)';
+    });
+
+    // Add smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+
+  <!-- Loading animation -->
+  <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-gray-800">
+    <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
+  <script src="/js/theme.js"></script>
+  <script>
+    window.addEventListener('load', () => {
+      document.getElementById('loader').style.display = 'none';
+    });
+  </script>
+</body>
+</html>

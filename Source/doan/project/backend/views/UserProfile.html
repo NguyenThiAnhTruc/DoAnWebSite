@@ -1,0 +1,1109 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SchoolEvents - Cài đặt</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    /* Mobile: hide sidebar by translating left; open() will bring it into view */
+    .sidebar{transform:translateX(-300px);transition:transform .3s ease}
+    .sidebar.open{transform:translateX(0)}
+    .overlay{background:rgba(0,0,0,.5)}
+    .fade{opacity:0;transform:translateY(8px)}
+    .fade.show{opacity:1;transform:translateY(0);transition:.25s ease}
+
+    /* On large screens (lg and up) keep the sidebar visible and disable overlay */
+    @media (min-width: 1024px) {
+      .sidebar { transform: translateX(0) !important; }
+      .overlay { display: none !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900">
+
+<div id="app" class="min-h-screen flex">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl lg:shadow-none" aria-label="Thanh điều hướng">
+    <div class="flex flex-col h-full">
+      <!-- Brand -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3" aria-label="Thương hiệu SchoolEvents">
+          <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-10 h-10 object-contain rounded-full">
+          <span class="text-lg font-bold text-gray-900 dark:text-white">SchoolEvents</span>
+        </div>
+        <button id="btnCloseSidebar" class="lg:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Đóng menu điều hướng">
+          <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- User -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <i data-lucide="user" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h3 id="sidebarUserName" class="font-semibold text-gray-900 dark:text-white">Khách</h3>
+            <p id="sidebarUserRole" class="text-sm text-gray-500 dark:text-gray-400">Student</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+            <div id="upcomingCount" class="text-2xl font-bold text-blue-600 dark:text-blue-400">0</div>
+            <div class="text-xs text-blue-600 dark:text-blue-400">Sự kiện sắp tới</div>
+          </div>
+          <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 text-center">
+            <div id="joinedCount" class="text-2xl font-bold text-purple-600 dark:text-purple-400">0</div>
+            <div class="text-xs text-purple-600 dark:text-purple-400">Đã tham gia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu -->
+      <nav id="menu" class="flex-1 p-4 space-y-2" aria-label="Menu chức năng">
+        <!-- populated by /public/js/navigation.js -->
+      </nav>
+
+      <!-- Logout -->
+      <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <button id="btnLogout" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl" aria-label="Đăng xuất">
+          <i data-lucide="log-out" class="w-5 h-5" aria-hidden="true"></i>
+          <span class="font-medium">Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay -->
+  <div id="overlay" class="overlay fixed inset-0 z-40 lg:hidden hidden" aria-hidden="true"></div>
+
+  <!-- Main -->
+  <main class="flex-1 flex flex-col">
+    <!-- Topbar -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button id="btnOpenSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Mở menu điều hướng">
+            <i data-lucide="menu" class="w-5 h-5 text-gray-600 dark:text-gray-300" aria-hidden="true"></i>
+          </button>
+          <div>
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Cài đặt</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Quản lý thông tin & tùy chọn người dùng</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <!-- Notification Button with Badge -->
+          <button id="btnNotifications" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
+            <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="notificationBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium animate-pulse">0</span>
+          </button>
+          <!-- Notification Dropdown -->
+          <div id="notificationDropdown" class="hidden absolute right-6 top-16 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 class="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
+              <div class="flex items-center space-x-2">
+                <button id="btnMarkAllRead" class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400">Đánh dấu đã đọc</button>
+                <button id="btnClearAllRead" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400">Xóa đã đọc</button>
+              </div>
+            </div>
+            <div id="notificationList" class="max-h-96 overflow-y-auto">
+              <!-- Notifications will be inserted here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <section class="flex-1 overflow-auto p-6">
+      <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <!-- Header Profile -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-8 text-white">
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center" aria-hidden="true">
+                <i data-lucide="user" class="w-10 h-10"></i>
+              </div>
+              <button id="btnAvatar" class="absolute -bottom-1 -right-1 w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center hover:bg-gray-50" aria-label="Thay ảnh đại diện">
+                <i data-lucide="camera" class="w-4 h-4" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div>
+              <h1 id="uName" class="text-2xl font-bold">Sinh viên A</h1>
+              <p id="uRole" class="text-blue-100 capitalize">student</p>
+              <p id="uEmail" class="text-blue-100 text-sm">sv.a@example.edu</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs (đÃ SỬA ARIA) -->
+        <div class="border-b border-gray-200 dark:border-gray-700">
+          <nav id="tabs" class="flex" role="tablist" aria-label="Thẻ nội dung cài đặt">
+            <button role="tab" id="tab-profile" data-tab="profile"
+                    class="tab px-6 py-4 text-sm font-medium text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 flex items-center"
+                    aria-selected="true" aria-controls="pane-profile" tabindex="0">
+              <i data-lucide="user" class="w-5 h-5 mr-2" aria-hidden="true"></i><span>Hồ sơ</span>
+            </button>
+
+            <button role="tab" id="tab-notifications" data-tab="notifications"
+                    class="tab px-6 py-4 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                    aria-selected="false" aria-controls="pane-notifications" tabindex="-1">
+              <i data-lucide="bell" class="w-5 h-5 mr-2" aria-hidden="true"></i><span>Thông báo</span>
+            </button>
+
+            <button role="tab" id="tab-privacy" data-tab="privacy"
+                    class="tab px-6 py-4 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                    aria-selected="false" aria-controls="pane-privacy" tabindex="-1">
+              <i data-lucide="shield" class="w-5 h-5 mr-2" aria-hidden="true"></i><span>Bảo mật</span>
+            </button>
+
+            <button role="tab" id="tab-preferences" data-tab="preferences"
+                    class="tab px-6 py-4 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center"
+                    aria-selected="false" aria-controls="pane-preferences" tabindex="-1">
+              <i data-lucide="globe" class="w-5 h-5 mr-2" aria-hidden="true"></i><span>Tùy chọn</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Panes -->
+        <div class="p-6">
+          <!-- Profile -->
+          <div id="pane-profile" class="fade show space-y-6" role="tabpanel" aria-labelledby="tab-profile" tabindex="0">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Hồ sơ</h2>
+              <div id="profileActions">
+                <button id="btnEdit" class="px-4 py-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30" aria-label="Chỉnh sửa hồ sơ"><span>Chỉnh sửa</span></button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="fName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Họ và tên</label>
+                <div class="relative">
+                  <i data-lucide="user" class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true"></i>
+                  <input id="fName" name="full_name" type="text" class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 dark:bg-gray-800 dark:text-white" value="Sinh viên A" disabled autocomplete="name"/>
+                </div>
+              </div>
+              <div>
+                <label for="fEmail" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                <div class="relative">
+                  <i data-lucide="mail" class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true"></i>
+                  <input id="fEmail" name="email" type="email" class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 dark:bg-gray-800 dark:text-white" value="sv.a@example.edu" disabled autocomplete="email"/>
+                </div>
+              </div>
+              <div>
+                <label for="fPhone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Số điện thoại</label>
+                <div class="relative">
+                  <i data-lucide="phone" class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true"></i>
+                  <input id="fPhone" name="tel" type="tel" class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 dark:bg-gray-800 dark:text-white" value="0123456789" disabled autocomplete="tel"/>
+                </div>
+              </div>
+              <div>
+                <label for="fStudentId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mã sinh viên</label>
+                <div class="relative">
+                  <i data-lucide="book-open" class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true"></i>
+                  <input id="fStudentId" name="student_id" type="text" class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 dark:bg-gray-800 dark:text-white" value="SV001234" disabled autocomplete="off"/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div id="pane-notifications" class="fade hidden space-y-6" role="tabpanel" aria-labelledby="tab-notifications" tabindex="0">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Thiết lập thông báo</h2>
+            <div id="notifList" class="space-y-4"></div>
+          </div>
+
+          <!-- Privacy -->
+          <div id="pane-privacy" class="fade hidden space-y-6" role="tabpanel" aria-labelledby="tab-privacy" tabindex="0">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Bảo mật</h2>
+
+            <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl" role="group" aria-labelledby="sec-change-password">
+              <div id="sec-change-password" class="flex items-center justify-between mb-3">
+                <div class="flex items-center"><i data-lucide="shield" class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-2" aria-hidden="true"></i><span class="font-medium text-gray-900 dark:text-white">Đổi mật khẩu</span></div>
+                <button id="btnChangePwd" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300" aria-label="Mở hộp thoại đổi mật khẩu">Thay đổi</button>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Cập nhật mật khẩu để bảo vệ tài khoản</p>
+            </div>
+
+            <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl" role="group" aria-labelledby="sec-2fa">
+              <div id="sec-2fa" class="flex items-center justify-between mb-3">
+                <div class="flex items-center"><i data-lucide="fingerprint" class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-2" aria-hidden="true"></i><span class="font-medium text-gray-900 dark:text-white">Xác thực 2 bước</span></div>
+                <button class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300" aria-label="Bật xác thực 2 bước">Bật</button>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Tăng cường bảo mật với xác thực 2 bước</p>
+            </div>
+          </div>
+
+          <!-- Preferences -->
+          <div id="pane-preferences" class="fade hidden space-y-6" role="tabpanel" aria-labelledby="tab-preferences" tabindex="0">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Tùy chọn</h2>
+
+            <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center">
+                  <i id="themeIcon" data-lucide="moon" class="w-5 h-5 text-gray-600 dark:text-gray-400 mr-2" aria-hidden="true"></i>
+                  <span class="font-medium text-gray-900 dark:text-white">Giao diện</span>
+                </div>
+                <button id="toggleTheme" class="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 flex items-center" aria-pressed="false" aria-label="Chuyển đổi giao diện">
+                  <i data-lucide="sun" class="w-4 h-4 mr-2" aria-hidden="true"></i><span id="themeButtonText"> Sáng</span>
+                </button>
+              </div>
+              <p class="text-sm text-gray-600 dark:text-gray-400">Chuyển đổi giữa giao diện sáng và tối</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal đổi mật khẩu -->
+<div id="pwdModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
+  <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
+    <h3 id="pwdTitle" class="text-lg font-semibold mb-4 dark:text-white">Đổi mật khẩu</h3>
+    <form class="space-y-3" novalidate>
+      <div>
+        <label for="oldPwd" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mật khẩu hiện tại</label>
+        <input id="oldPwd" type="password" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" autocomplete="current-password" required />
+      </div>
+      <div>
+        <label for="newPwd" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mật khẩu mới</label>
+        <input id="newPwd" type="password" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" autocomplete="new-password" minlength="6" required />
+      </div>
+      <div>
+        <label for="newPwd2" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Xác nhận mật khẩu mới</label>
+        <input id="newPwd2" type="password" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" autocomplete="new-password" minlength="6" required />
+      </div>
+      <div class="mt-6 flex justify-end space-x-2">
+        <button id="cancelPwd" type="button" class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700" aria-label="Hủy đổi mật khẩu">Hủy</button>
+        <button id="savePwd" type="submit" class="px-4 py-2 rounded-lg text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700" aria-label="Lưu mật khẩu mới">Lưu</button>
+      </div>
+      <div id="pwdAlert" class="sr-only" aria-live="polite"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ===== Load user data from localStorage ===== */
+let user = { name: 'Khách', email: 'guest@example.edu', phone: '', studentId: '', role: 'student' };
+let userSettings = {
+  notify_event_updates: true,
+  notify_new_events: true,
+  notify_reminders: true,
+  two_factor_enabled: false,
+  language: 'vi',
+  theme: 'light'
+};
+
+try {
+  const storedUser = JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null');
+  if (storedUser) {
+    user = {
+      name: storedUser.name || `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim() || storedUser.username || 'Khách',
+      first_name: storedUser.first_name || '',
+      last_name: storedUser.last_name || '',
+      email: storedUser.email || 'guest@example.edu',
+      phone: storedUser.phone || '',
+      studentId: storedUser.student_id || storedUser.username || '',
+      role: storedUser.role || 'student',
+      username: storedUser.username || '',
+      user_id: storedUser.user_id || storedUser.id
+    };
+    console.log('UserProfile - Loaded user:', user);
+  } else {
+    console.warn('UserProfile - No user found in localStorage');
+  }
+} catch (e) {
+  console.error('UserProfile - Error loading user:', e);
+}
+
+/* ===== Fetch user settings from API ===== */
+let isLoadingSettings = false; // Prevent multiple simultaneous requests
+
+async function loadUserSettings() {
+  if (!user.user_id) return;
+  if (isLoadingSettings) {
+    console.log('UserProfile - Already loading settings, skipping...');
+    return; // Prevent duplicate requests
+  }
+  
+  // 1. Hiển thị cache trước (nếu có) - trang load ngay lập tức
+  const cacheKey = `user_settings_${user.user_id}`;
+  const cachedSettings = localStorage.getItem(cacheKey);
+  
+  // ✅ ƯU TIÊN localStorage.language (single source of truth)
+  const masterLanguage = localStorage.getItem('language');
+  const masterTheme = localStorage.getItem('theme');
+  
+  if (cachedSettings) {
+    try {
+      userSettings = JSON.parse(cachedSettings);
+      
+      // ✅ Override với giá trị từ localStorage nếu có
+      if (masterLanguage) {
+        userSettings.language = masterLanguage;
+        console.log(`✅ Using master language from localStorage: ${masterLanguage}`);
+      }
+      if (masterTheme) {
+        userSettings.theme = masterTheme;
+        console.log(`✅ Using master theme from localStorage: ${masterTheme}`);
+      }
+      
+      console.log('UserProfile - Loaded settings from cache (with localStorage override)');
+      
+      // Apply settings
+      applyTheme(userSettings.theme);
+      
+      renderNotifications();
+      update2FAStatus();
+    } catch (e) {
+      console.error('Error parsing cached settings:', e);
+    }
+  } else if (masterLanguage || masterTheme) {
+    // Không có cache nhưng có localStorage master values
+    if (masterTheme) {
+      userSettings.theme = masterTheme;
+      applyTheme(masterTheme);
+    }
+    console.log('UserProfile - Using master values from localStorage (no cache)');
+  }
+  
+  // 2. Fetch dữ liệu mới từ API trong background (cập nhật nếu có thay đổi)
+  isLoadingSettings = true;
+  
+  try {
+    const response = await fetch(`/api/users/${user.user_id}`);
+    const data = await response.json();
+    
+    if (data.success && data.user) {
+      // ✅ Merge dữ liệu từ database với localStorage master values
+      const dbLanguage = data.user.language || 'vi';
+      const dbTheme = data.user.theme || 'light';
+      
+      // ✅ localStorage có quyền cao nhất (user vừa mới đổi)
+      const finalLanguage = masterLanguage || dbLanguage;
+      const finalTheme = masterTheme || dbTheme;
+      
+      userSettings = {
+        notify_event_updates: data.user.notify_event_updates ?? true,
+        notify_new_events: data.user.notify_new_events ?? true,
+        notify_reminders: data.user.notify_reminders ?? true,
+        two_factor_enabled: data.user.two_factor_enabled ?? false,
+        language: finalLanguage,
+        theme: finalTheme
+      };
+      
+      // ✅ Lưu vào cache với giá trị đã merge
+      localStorage.setItem(cacheKey, JSON.stringify(userSettings));
+      
+      // ✅ Đồng bộ localStorage master values
+      localStorage.setItem('language', finalLanguage);
+      localStorage.setItem('theme', finalTheme);
+      
+      console.log(`✅ Synced settings: language=${finalLanguage}, theme=${finalTheme}`);
+      
+      // Apply theme
+      applyTheme(userSettings.theme);
+      
+      renderNotifications();
+      update2FAStatus();
+    }
+  } catch (err) {
+    console.error('Error loading user settings:', err);
+    // Nếu API lỗi nhưng có cache, vẫn dùng cache được
+  } finally {
+    isLoadingSettings = false; // Reset flag
+  }
+}
+
+/* ===== Sidebar mobile ===== */
+const sidebar=document.getElementById('sidebar');
+const overlay=document.getElementById('overlay');
+document.getElementById('btnOpenSidebar').onclick=()=>{sidebar.classList.add('open');overlay.classList.remove('hidden');};
+document.getElementById('btnCloseSidebar').onclick=()=>{sidebar.classList.remove('open');overlay.classList.add('hidden');};
+overlay.onclick=()=>{sidebar.classList.remove('open');overlay.classList.add('hidden');};
+if (window.innerWidth>=1024) sidebar.classList.add('open');
+
+/* ===== Fill header profile ===== */
+const uName = document.getElementById('uName');
+const uRole = document.getElementById('uRole');
+const uEmail = document.getElementById('uEmail');
+const fName = document.getElementById('fName');
+const fEmail = document.getElementById('fEmail');
+const fPhone = document.getElementById('fPhone');
+const fStudentId = document.getElementById('fStudentId');
+const profileActions = document.getElementById('profileActions');
+
+// Display role in Vietnamese
+const roleDisplay = {
+  'admin': 'Quản trị viên',
+  'teacher': 'Giáo viên', 
+  'student': 'Sinh viên'
+};
+
+function updateProfileDisplay() {
+  uName.textContent = user.name;
+  uEmail.textContent = user.email;
+  uRole.textContent = roleDisplay[user.role.toLowerCase()] || user.role;
+  
+  fName.value = user.name;
+  fEmail.value = user.email;
+  fPhone.value = user.phone;
+  fStudentId.value = user.studentId || user.username;
+  
+  const sidebarUserName = document.getElementById('sidebarUserName');
+  const sidebarUserRole = document.getElementById('sidebarUserRole');
+  if (sidebarUserName) sidebarUserName.textContent = user.name;
+  if (sidebarUserRole) sidebarUserRole.textContent = roleDisplay[user.role.toLowerCase()] || user.role;
+}
+
+updateProfileDisplay();
+
+/* ===== Tabs ===== */
+const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+const panes = {
+  profile: document.getElementById('pane-profile'),
+  notifications: document.getElementById('pane-notifications'),
+  privacy: document.getElementById('pane-privacy'),
+  preferences: document.getElementById('pane-preferences'),
+};
+
+function activateTab(tabBtn) {
+  tabs.forEach(t => {
+    const isActive = (t === tabBtn);
+    t.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    t.tabIndex = isActive ? 0 : -1;
+    
+    // Active state
+    t.classList.toggle('text-blue-600', isActive);
+    t.classList.toggle('dark:text-blue-400', isActive);
+    t.classList.toggle('border-b-2', isActive);
+    t.classList.toggle('border-blue-600', isActive);
+    t.classList.toggle('dark:border-blue-400', isActive);
+    t.classList.toggle('bg-blue-50', isActive);
+    t.classList.toggle('dark:bg-blue-900/20', isActive);
+    
+    // Inactive state
+    t.classList.toggle('text-gray-600', !isActive);
+    t.classList.toggle('dark:text-gray-300', !isActive);
+  });
+
+  const id = tabBtn.getAttribute('data-tab');
+  Object.values(panes).forEach(p => { p.classList.add('hidden'); p.classList.remove('show'); });
+  panes[id].classList.remove('hidden');
+  requestAnimationFrame(() => panes[id].classList.add('show'));
+  tabBtn.focus();
+  lucide.createIcons();
+}
+
+tabs.forEach(btn => {
+  btn.addEventListener('click', () => activateTab(btn));
+  btn.addEventListener('keydown', (e) => {
+    const i = tabs.indexOf(btn);
+    let next;
+    switch (e.key) {
+      case 'ArrowRight': case 'ArrowDown':
+        next = tabs[(i + 1) % tabs.length]; e.preventDefault(); next.focus(); break;
+      case 'ArrowLeft': case 'ArrowUp':
+        next = tabs[(i - 1 + tabs.length) % tabs.length]; e.preventDefault(); next.focus(); break;
+      case 'Home':
+        e.preventDefault(); tabs[0].focus(); break;
+      case 'End':
+        e.preventDefault(); tabs[tabs.length - 1].focus(); break;
+      case 'Enter': case ' ':
+        e.preventDefault(); activateTab(btn); break;
+    }
+  });
+});
+
+/* ===== Edit profile ===== */
+let editing = false;
+const btnEdit = document.getElementById('btnEdit');
+
+async function saveProfile() {
+  if (!fName.value || !fEmail.value) {
+    alert('Vui lòng điền đầy đủ họ tên và email');
+    return;
+  }
+
+  const nameParts = fName.value.trim().split(' ');
+  const lastName = nameParts.pop() || '';
+  const firstName = nameParts.join(' ') || lastName;
+
+  const updatedData = {
+    first_name: firstName,
+    last_name: lastName,
+    email: fEmail.value.trim(),
+    phone: fPhone.value.trim()
+  };
+
+  try {
+    const response = await fetch(`/api/users/${user.user_id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedData)
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Update local user object
+      user.name = fName.value.trim();
+      user.first_name = firstName;
+      user.last_name = lastName;
+      user.email = updatedData.email;
+      user.phone = updatedData.phone;
+
+      // Update localStorage
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const updatedUser = {
+        ...storedUser,
+        name: user.name,
+        first_name: firstName,
+        last_name: lastName,
+        email: user.email,
+        phone: user.phone
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+
+      updateProfileDisplay();
+      alert('Cập nhật thông tin thành công!');
+      setEditing(false);
+    } else {
+      alert(data.message || 'Có lỗi khi cập nhật thông tin');
+    }
+  } catch (err) {
+    console.error('Error saving profile:', err);
+    alert('Không thể kết nối đến server');
+  }
+}
+
+function setEditing(on) {
+  editing = on;
+  [fName, fEmail, fPhone].forEach(inp => inp.disabled = !on);
+  fStudentId.disabled = true; // Mã sinh viên không được phép chỉnh sửa
+  
+  if (on) {
+    profileActions.innerHTML = `
+      <div class="flex space-x-2">
+        <button id="btnCancel" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Hủy</button>
+        <button id="btnSave" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
+          <i data-lucide="save" class="w-4 h-4 mr-1"></i>Lưu
+        </button>
+      </div>`;
+    
+    document.getElementById('btnCancel').onclick = () => {
+      setEditing(false);
+      updateProfileDisplay();
+      lucide.createIcons();
+    };
+    
+    document.getElementById('btnSave').onclick = saveProfile;
+  } else {
+    profileActions.innerHTML = `<button id="btnEdit" class="px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">Chỉnh sửa</button>`;
+    document.getElementById('btnEdit').onclick = () => setEditing(true);
+  }
+  lucide.createIcons();
+}
+
+btnEdit.onclick = () => setEditing(true);
+
+/* ===== Notifications ===== */
+function renderNotifications() {
+  const notifList = document.getElementById('notifList');
+  const settings = [
+    { key: 'notify_event_updates', label: 'Cập nhật sự kiện', desc: 'Nhận thông báo khi sự kiện có thay đổi', value: userSettings.notify_event_updates },
+    { key: 'notify_new_events', label: 'Sự kiện mới', desc: 'Nhận thông báo về các sự kiện mới', value: userSettings.notify_new_events },
+    { key: 'notify_reminders', label: 'Nhắc nhở', desc: 'Nhận nhắc nhở trước khi sự kiện diễn ra', value: userSettings.notify_reminders }
+  ];
+
+  notifList.innerHTML = '';
+  settings.forEach((s, idx) => {
+    const id = `switch-${s.key}`;
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl';
+    row.innerHTML = `
+      <div>
+        <div class="font-medium text-gray-900 dark:text-white">${s.label}</div>
+        <div class="text-sm text-gray-600 dark:text-gray-400">${s.desc}</div>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input id="${id}" type="checkbox" ${s.value ? 'checked' : ''} data-key="${s.key}" 
+               class="sr-only peer">
+        <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+      </label>`;
+    notifList.appendChild(row);
+  });
+
+  // Bind change events
+  notifList.querySelectorAll('input[type=checkbox]').forEach(chk => {
+    chk.onchange = async () => {
+      const key = chk.getAttribute('data-key');
+      userSettings[key] = chk.checked;
+      await saveNotificationSettings();
+    };
+  });
+}
+
+async function saveNotificationSettings() {
+  if (!user.user_id) return;
+  
+  try {
+    const response = await fetch(`/api/users/${user.user_id}/notifications`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        notify_event_updates: userSettings.notify_event_updates,
+        notify_new_events: userSettings.notify_new_events,
+        notify_reminders: userSettings.notify_reminders
+      })
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      console.error('Failed to save notification settings');
+    }
+  } catch (err) {
+    console.error('Error saving notification settings:', err);
+  }
+}
+
+/* ===== Privacy: Change Password ===== */
+const pwdModal = document.getElementById('pwdModal');
+document.getElementById('btnChangePwd').onclick = () => {
+  pwdModal.classList.remove('hidden');
+  pwdModal.classList.add('flex');
+  document.getElementById('oldPwd').value = '';
+  document.getElementById('newPwd').value = '';
+  document.getElementById('newPwd2').value = '';
+};
+
+document.getElementById('cancelPwd').onclick = () => {
+  pwdModal.classList.add('hidden');
+  pwdModal.classList.remove('flex');
+};
+
+document.getElementById('savePwd').onclick = async (e) => {
+  e.preventDefault();
+  const oldPwd = document.getElementById('oldPwd').value.trim();
+  const newPwd = document.getElementById('newPwd').value.trim();
+  const newPwd2 = document.getElementById('newPwd2').value.trim();
+
+  if (!oldPwd || !newPwd || !newPwd2) {
+    alert('Vui lòng điền đầy đủ thông tin');
+    return;
+  }
+
+  if (newPwd.length < 6) {
+    alert('Mật khẩu mới phải có ít nhất 6 ký tự');
+    return;
+  }
+
+  if (newPwd !== newPwd2) {
+    alert('Xác nhận mật khẩu không khớp');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/users/${user.user_id}/password`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        old_password: oldPwd,
+        new_password: newPwd
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert('Đổi mật khẩu thành công');
+      pwdModal.classList.add('hidden');
+      pwdModal.classList.remove('flex');
+    } else {
+      alert(data.message || 'Không thể đổi mật khẩu');
+    }
+  } catch (err) {
+    console.error('Error changing password:', err);
+    alert('Không thể kết nối đến server');
+  }
+};
+
+/* ===== 2FA Toggle ===== */
+function update2FAStatus() {
+  const btn2FA = document.querySelector('#sec-2fa button');
+  if (btn2FA) {
+    btn2FA.textContent = userSettings.two_factor_enabled ? 'Tắt' : 'Bật';
+    btn2FA.onclick = async () => {
+      const newStatus = !userSettings.two_factor_enabled;
+      
+      try {
+        const response = await fetch(`/api/users/${user.user_id}/2fa`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: newStatus })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          userSettings.two_factor_enabled = newStatus;
+          update2FAStatus();
+          alert(data.message);
+        } else {
+          alert(data.message || 'Không thể cập nhật xác thực 2 bước');
+        }
+      } catch (err) {
+        console.error('Error updating 2FA:', err);
+        alert('Không thể kết nối đến server');
+      }
+    };
+  }
+}
+
+/* ===== Preferences: Theme Toggle ===== */
+function showToast(message, type = 'success') {
+  // Remove existing toast if any
+  const existingToast = document.getElementById('languageToast');
+  if (existingToast) existingToast.remove();
+  
+  const toast = document.createElement('div');
+  toast.id = 'languageToast';
+  toast.className = `fixed top-4 right-4 z-[200] px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 ${
+    type === 'success' 
+      ? 'bg-green-600 text-white' 
+      : 'bg-red-600 text-white'
+  }`;
+  toast.textContent = message;
+  toast.style.opacity = '0';
+  toast.style.transform = 'translateY(-20px)';
+  
+  document.body.appendChild(toast);
+  
+  // Animate in
+  setTimeout(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  }, 10);
+  
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-20px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+/* ===== Preferences: Theme Toggle ===== */
+const toggleTheme = document.getElementById('toggleTheme');
+const themeIcon = document.getElementById('themeIcon');
+
+function applyTheme(theme) {
+  // Sử dụng ThemeService toàn cục
+  if (window.ThemeService) {
+    ThemeService.applyTheme(theme);
+  }
+  
+  // Cập nhật UI của button
+  const isDark = theme === 'dark';
+  if (isDark) {
+    themeIcon.setAttribute('data-lucide', 'sun');
+    toggleTheme.setAttribute('aria-pressed', 'true');
+    toggleTheme.innerHTML = '<i data-lucide="moon" class="w-4 h-4 mr-2"></i> Tối';
+  } else {
+    themeIcon.setAttribute('data-lucide', 'moon');
+    toggleTheme.setAttribute('aria-pressed', 'false');
+    toggleTheme.innerHTML = '<i data-lucide="sun" class="w-4 h-4 mr-2"></i> Sáng';
+  }
+  lucide.createIcons();
+}
+
+toggleTheme.onclick = async () => {
+  const newTheme = userSettings.theme === 'light' ? 'dark' : 'light';
+  userSettings.theme = newTheme;
+  
+  // ✅ Lưu localStorage NGAY
+  localStorage.setItem('theme', newTheme);
+  console.log(`💾 Saved theme to localStorage: ${newTheme}`);
+  
+  applyTheme(newTheme);
+  
+  try {
+    const response = await fetch(`/api/users/${user.user_id}/preferences`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        language: userSettings.language,
+        theme: newTheme
+      })
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      console.error('Failed to save theme preference');
+    } else {
+      // ✅ CẬP NHẬT CACHE
+      const cacheKey = `user_settings_${user.user_id}`;
+      const updatedCache = {
+        ...userSettings,
+        language: userSettings.language,
+        theme: newTheme
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(updatedCache));
+      console.log(`✅ Cache updated with new theme: ${newTheme}`);
+      
+      // Đồng bộ với ThemeService
+      if (window.ThemeService) {
+        ThemeService.syncWithServer(newTheme);
+      }
+    }
+  } catch (err) {
+    console.error('Error saving theme:', err);
+  }
+};
+
+/* ===== Initialize ===== */
+// Xóa flag languageChanged sau khi reload
+if (sessionStorage.getItem('languageChanged')) {
+  console.log('Page reloaded after language change');
+  sessionStorage.removeItem('languageChanged');
+}
+
+loadUserSettings();
+lucide.createIcons();
+
+/* ===== Logout ===== */
+const btnLogout = document.getElementById('btnLogout');
+if (btnLogout) {
+  btnLogout.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+      // Reset theme về mặc định
+      if (window.ThemeService) {
+        ThemeService.resetToDefault();
+      }
+      
+      // Xóa dữ liệu user
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('auth_token_user');
+      localStorage.removeItem('app_theme');
+      
+      window.location.href = '/HomePage.html';
+    }
+  });
+}
+</script>
+<script src="/js/notifications.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/navigation.js"></script>
+<script>
+  // Initialize theme when page loads
+  if (window.ThemeService) {
+    ThemeService.init();
+  }
+  
+  // ✅ LanguageService tự động init - KHÔNG cần gọi thủ công
+  
+  // Force navigation menu to render after all scripts loaded
+  if (window.initNavigation && typeof window.initNavigation === 'function') {
+    console.log('✅ Manually triggering navigation init');
+    window.initNavigation();
+  }
+  
+  // ==== NOTIFICATION SYSTEM ====
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  const HeaderComponent = {
+    notificationBadge: document.getElementById('notificationBadge'),
+    notificationDropdown: document.getElementById('notificationDropdown'),
+    notificationList: document.getElementById('notificationList'),
+    btnNotifications: document.getElementById('btnNotifications'),
+    btnMarkAllRead: document.getElementById('btnMarkAllRead'),
+    btnClearAllRead: document.getElementById('btnClearAllRead'),
+    
+    async updateNotificationBadge() {
+      try {
+        const userId = currentUser?.id;
+        if (!userId) return;
+        
+        const count = await NotificationService.getUnreadCount(userId);
+        if (count > 0) {
+          this.notificationBadge.textContent = count > 99 ? '99+' : count;
+          this.notificationBadge.classList.remove('hidden');
+        } else {
+          this.notificationBadge.classList.add('hidden');
+        }
+      } catch (error) {
+        console.error('Error updating notification badge:', error);
+      }
+    },
+    
+    async renderNotifications() {
+      try {
+        const userId = currentUser?.id;
+        if (!userId) return;
+        
+        const notifications = await NotificationService.getNotifications(userId, 10);
+        
+        if (!notifications || notifications.length === 0) {
+          this.notificationList.innerHTML = `
+            <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+              <i data-lucide="bell-off" class="w-12 h-12 mx-auto mb-2 text-gray-400"></i>
+              <p>Không có thông báo</p>
+            </div>`;
+          lucide.createIcons();
+          return;
+        }
+        
+        this.notificationList.innerHTML = notifications.map(n => {
+          const isUnread = !n.is_read;
+          const timeAgo = this.getTimeAgo(n.created_at);
+          
+          let iconName = 'bell';
+          let iconColor = 'text-blue-500';
+          if (n.type === 'registration_confirmed') {
+            iconName = 'check-circle';
+            iconColor = 'text-green-500';
+          } else if (n.type === 'event_reminder') {
+            iconName = 'clock';
+            iconColor = 'text-orange-500';
+          } else if (n.type === 'event_completed') {
+            iconName = 'calendar-check';
+            iconColor = 'text-purple-500';
+          } else if (n.type === 'event_cancelled') {
+            iconName = 'x-circle';
+            iconColor = 'text-red-500';
+          }
+          
+          return `
+            <div class="notification-item p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors ${isUnread ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" 
+                 data-notification-id="${n.notification_id}">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                  <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">${n.title}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${n.message}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${timeAgo}</p>
+                </div>
+                ${isUnread ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-blue-500 rounded-full"></div></div>' : ''}
+              </div>
+            </div>`;
+        }).join('');
+        
+        lucide.createIcons();
+        
+        document.querySelectorAll('.notification-item').forEach(item => {
+          item.addEventListener('click', () => this.handleNotificationClick(item));
+        });
+      } catch (error) {
+        console.error('Error rendering notifications:', error);
+        this.notificationList.innerHTML = `
+          <div class="p-4 text-center text-red-500">
+            <p>Lỗi tải thông báo</p>
+          </div>`;
+      }
+    },
+    
+    async handleNotificationClick(item) {
+      const notificationId = item.dataset.notificationId;
+      try {
+        await NotificationService.markAsRead(notificationId);
+        await this.updateNotificationBadge();
+        await this.renderNotifications();
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    },
+    
+    toggleNotificationDropdown() {
+      const isHidden = this.notificationDropdown.classList.contains('hidden');
+      if (isHidden) {
+        this.notificationDropdown.classList.remove('hidden');
+        this.renderNotifications();
+      } else {
+        this.notificationDropdown.classList.add('hidden');
+      }
+    },
+    
+    getTimeAgo(timestamp) {
+      const now = new Date();
+      const time = new Date(timestamp);
+      const diffInSeconds = Math.floor((now - time) / 1000);
+      
+      if (diffInSeconds < 60) return 'Vừa xong';
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} phút trước`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} giờ trước`;
+      if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} ngày trước`;
+      return time.toLocaleDateString('vi-VN');
+    },
+    
+    init(userId) {
+      if (!userId) return;
+      
+      this.btnNotifications?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleNotificationDropdown();
+      });
+      
+      this.btnMarkAllRead?.addEventListener('click', async () => {
+        try {
+          await NotificationService.markAllAsRead(userId);
+          await this.updateNotificationBadge();
+          await this.renderNotifications();
+        } catch (error) {
+          console.error('Error marking all as read:', error);
+        }
+      });
+      
+      this.btnClearAllRead?.addEventListener('click', async () => {
+        try {
+          await NotificationService.clearReadNotifications(userId);
+          await this.updateNotificationBadge();
+          await this.renderNotifications();
+        } catch (error) {
+          console.error('Error clearing read notifications:', error);
+        }
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!this.notificationDropdown.contains(e.target) && 
+            !this.btnNotifications.contains(e.target)) {
+          this.notificationDropdown.classList.add('hidden');
+        }
+      });
+      
+      this.updateNotificationBadge();
+      
+      setInterval(() => {
+        if (!this.notificationDropdown.classList.contains('hidden')) {
+          this.renderNotifications();
+        }
+        this.updateNotificationBadge();
+      }, 30000);
+    }
+  };
+  
+  // Initialize notification system
+  if (currentUser?.id) {
+    HeaderComponent.init(currentUser.id);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Language Issue</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .log-item { 
+            padding: 8px; 
+            margin: 4px 0; 
+            border-left: 4px solid #3B82F6;
+            background: #EFF6FF;
+        }
+        .log-success { border-left-color: #10B981; background: #ECFDF5; }
+        .log-error { border-left-color: #EF4444; background: #FEF2F2; }
+        .log-warning { border-left-color: #F59E0B; background: #FFFBEB; }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">🐛 Debug: Language Reset Bug</h1>
+            <p class="text-gray-600">Test logout → login lại → kiểm tra ngôn ngữ</p>
+        </div>
+
+        <!-- Current Status -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">📊 Current Status</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 bg-blue-50 rounded">
+                    <p class="text-sm text-gray-600">localStorage['language']</p>
+                    <p id="currentLocalStorage" class="text-xl font-bold text-blue-600">-</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded">
+                    <p class="text-sm text-gray-600">LanguageService.currentLanguage</p>
+                    <p id="currentLanguageService" class="text-xl font-bold text-green-600">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Scenarios -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">🧪 Test Scenarios</h2>
+            
+            <!-- Scenario 1 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">1️⃣ Test: Đổi sang Tiếng Việt</h3>
+                <button onclick="testChangeLanguage('vi')" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    🇻🇳 Đổi sang Tiếng Việt
+                </button>
+                <button onclick="testChangeLanguage('en')" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 ml-2">
+                    🇺🇸 Change to English
+                </button>
+            </div>
+
+            <!-- Scenario 2 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">2️⃣ Test: Lưu vào Database</h3>
+                <button onclick="testSaveToDatabase()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                    💾 Lưu vào Database
+                </button>
+            </div>
+
+            <!-- Scenario 3 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">3️⃣ Test: Kiểm tra Database</h3>
+                <button onclick="testCheckDatabase()" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
+                    🔍 Kiểm tra Database
+                </button>
+            </div>
+
+            <!-- Scenario 4 -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-2">4️⃣ Test: Simulate Logout</h3>
+                <button onclick="testLogout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    🚪 Simulate Logout
+                </button>
+            </div>
+
+            <!-- Scenario 5 -->
+            <div>
+                <h3 class="text-lg font-semibold mb-2">5️⃣ Test: Simulate Login</h3>
+                <button onclick="testLogin()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    🔑 Simulate Login (admin@school.edu.vn)
+                </button>
+            </div>
+        </div>
+
+        <!-- Log Console -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">📋 Test Logs</h2>
+                <button onclick="clearLogs()" class="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">
+                    Clear Logs
+                </button>
+            </div>
+            <div id="logConsole" class="space-y-2 max-h-96 overflow-y-auto font-mono text-sm">
+                <div class="log-item">Console ready...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Load LanguageService -->
+    <script src="/js/language.js"></script>
+    <script src="/js/AuthService.js"></script>
+
+    <script>
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🛠️ LOGGING UTILITIES
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        function log(message, type = 'info') {
+            const logConsole = document.getElementById('logConsole');
+            const timestamp = new Date().toLocaleTimeString();
+            const logClass = type === 'success' ? 'log-success' : 
+                           type === 'error' ? 'log-error' : 
+                           type === 'warning' ? 'log-warning' : 'log-item';
+            
+            const logItem = document.createElement('div');
+            logItem.className = logClass;
+            logItem.textContent = `[${timestamp}] ${message}`;
+            logConsole.appendChild(logItem);
+            logConsole.scrollTop = logConsole.scrollHeight;
+            
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        function clearLogs() {
+            document.getElementById('logConsole').innerHTML = '<div class="log-item">Console cleared...</div>';
+        }
+
+        function updateStatus() {
+            document.getElementById('currentLocalStorage').textContent = localStorage.getItem('language') || 'null';
+            document.getElementById('currentLanguageService').textContent = window.LanguageService ? LanguageService.getCurrentLanguage() : 'not loaded';
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🧪 TEST 1: ĐỔI NGÔN NGỮ
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        async function testChangeLanguage(lang) {
+            log(`━━━━━ TEST 1: Đổi ngôn ngữ sang ${lang} ━━━━━`, 'info');
+            
+            try {
+                // Step 1: Call LanguageService
+                log(`Step 1: Calling LanguageService.changeLanguage('${lang}')...`);
+                const success = LanguageService.changeLanguage(lang);
+                
+                if (success) {
+                    log(`✅ LanguageService.changeLanguage('${lang}') successful`, 'success');
+                } else {
+                    log(`❌ LanguageService.changeLanguage('${lang}') failed`, 'error');
+                    return;
+                }
+
+                // Step 2: Check localStorage
+                const storedLang = localStorage.getItem('language');
+                log(`Step 2: localStorage['language'] = '${storedLang}'`);
+                
+                if (storedLang === lang) {
+                    log(`✅ localStorage updated correctly`, 'success');
+                } else {
+                    log(`❌ localStorage NOT updated (expected '${lang}', got '${storedLang}')`, 'error');
+                }
+
+                // Step 3: Check LanguageService
+                const currentLang = LanguageService.getCurrentLanguage();
+                log(`Step 3: LanguageService.getCurrentLanguage() = '${currentLang}'`);
+                
+                if (currentLang === lang) {
+                    log(`✅ LanguageService state correct`, 'success');
+                } else {
+                    log(`❌ LanguageService state incorrect (expected '${lang}', got '${currentLang}')`, 'error');
+                }
+
+                updateStatus();
+                log(`━━━━━ TEST 1 COMPLETED ━━━━━`, 'success');
+                
+            } catch (error) {
+                log(`❌ TEST 1 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🧪 TEST 2: LƯU VÀO DATABASE
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        async function testSaveToDatabase() {
+            log(`━━━━━ TEST 2: Lưu vào Database ━━━━━`, 'info');
+            
+            try {
+                // Get user from localStorage
+                const authData = localStorage.getItem('auth_token_user');
+                if (!authData) {
+                    log(`❌ No auth_token_user found. Please login first.`, 'error');
+                    return;
+                }
+
+                const { user } = JSON.parse(authData);
+                const currentLang = localStorage.getItem('language') || 'vi';
+                
+                log(`Step 1: User ID = ${user.user_id}, Current language = '${currentLang}'`);
+                log(`Step 2: Calling API PUT /api/users/${user.user_id}/preferences...`);
+
+                // Call API
+                const response = await fetch(`/api/users/${user.user_id}/preferences`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        language: currentLang,
+                        theme: localStorage.getItem('theme') || 'light'
+                    })
+                });
+
+                const data = await response.json();
+                log(`Step 3: API Response: ${JSON.stringify(data)}`);
+
+                if (response.ok && data.success) {
+                    log(`✅ Saved to database successfully!`, 'success');
+                    log(`   Language: ${data.preferences?.language}`);
+                    log(`   Theme: ${data.preferences?.theme}`);
+                } else {
+                    log(`❌ Failed to save to database: ${data.message}`, 'error');
+                }
+
+                log(`━━━━━ TEST 2 COMPLETED ━━━━━`, 'success');
+                
+            } catch (error) {
+                log(`❌ TEST 2 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🧪 TEST 3: KIỂM TRA DATABASE
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        async function testCheckDatabase() {
+            log(`━━━━━ TEST 3: Kiểm tra Database ━━━━━`, 'info');
+            
+            try {
+                // Get user from localStorage
+                const authData = localStorage.getItem('auth_token_user');
+                if (!authData) {
+                    log(`❌ No auth_token_user found. Please login first.`, 'error');
+                    return;
+                }
+
+                const { user } = JSON.parse(authData);
+                
+                log(`Step 1: Calling API GET /api/users/${user.user_id}...`);
+
+                // Call API
+                const response = await fetch(`/api/users/${user.user_id}`);
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    log(`✅ Database query successful!`, 'success');
+                    log(`   User ID: ${data.user.user_id}`);
+                    log(`   Username: ${data.user.username}`);
+                    log(`   Email: ${data.user.email}`);
+                    log(`   Language in DB: '${data.user.language}'`);
+                    log(`   Theme in DB: '${data.user.theme}'`);
+                    
+                    // Compare với localStorage
+                    const localLang = localStorage.getItem('language');
+                    if (localLang === data.user.language) {
+                        log(`✅ localStorage matches database`, 'success');
+                    } else {
+                        log(`⚠️ localStorage ('${localLang}') DIFFERENT from database ('${data.user.language}')`, 'warning');
+                    }
+                } else {
+                    log(`❌ Failed to query database: ${data.message}`, 'error');
+                }
+
+                log(`━━━━━ TEST 3 COMPLETED ━━━━━`, 'success');
+                
+            } catch (error) {
+                log(`❌ TEST 3 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🧪 TEST 4: SIMULATE LOGOUT
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        function testLogout() {
+            log(`━━━━━ TEST 4: Simulate Logout ━━━━━`, 'info');
+            
+            try {
+                log(`Step 1: Before logout - checking localStorage...`);
+                log(`   auth_token_user: ${localStorage.getItem('auth_token_user') ? 'EXISTS' : 'null'}`);
+                log(`   language: '${localStorage.getItem('language')}'`);
+                log(`   theme: '${localStorage.getItem('theme')}'`);
+
+                log(`Step 2: Calling localStorage.removeItem('auth_token_user')...`);
+                localStorage.removeItem('auth_token_user');
+
+                log(`Step 3: After logout - checking localStorage...`);
+                log(`   auth_token_user: ${localStorage.getItem('auth_token_user') ? 'EXISTS' : 'null (removed)'}`);
+                log(`   language: '${localStorage.getItem('language')}'`);
+                log(`   theme: '${localStorage.getItem('theme')}'`);
+
+                if (localStorage.getItem('language')) {
+                    log(`✅ localStorage['language'] NOT removed (correct!)`, 'success');
+                } else {
+                    log(`❌ localStorage['language'] WAS removed (BUG!)`, 'error');
+                }
+
+                updateStatus();
+                log(`━━━━━ TEST 4 COMPLETED ━━━━━`, 'success');
+                
+            } catch (error) {
+                log(`❌ TEST 4 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🧪 TEST 5: SIMULATE LOGIN
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        async function testLogin() {
+            log(`━━━━━ TEST 5: Simulate Login ━━━━━`, 'info');
+            
+            try {
+                log(`Step 1: Calling API POST /api/auth/login...`);
+                log(`   Email: admin@school.edu.vn`);
+                log(`   Password: admin123`);
+
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: 'admin@school.edu.vn',
+                        password: 'admin123'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    log(`✅ Login successful!`, 'success');
+                    log(`   User ID: ${data.user.user_id}`);
+                    log(`   Username: ${data.user.username}`);
+                    log(`   Role: ${data.user.role}`);
+                    log(`   Language from API: '${data.user.language}'`);
+                    log(`   Theme from API: '${data.user.theme}'`);
+
+                    // Simulate AuthService.saveAuth()
+                    log(`Step 2: Simulating AuthService.saveAuth()...`);
+                    localStorage.setItem('auth_token_user', JSON.stringify({ token: data.token, user: data.user }));
+                    
+                    if (data.user.language) {
+                        localStorage.setItem('language', data.user.language);
+                        log(`   → localStorage['language'] = '${data.user.language}'`);
+                    }
+                    
+                    if (data.user.theme) {
+                        localStorage.setItem('theme', data.user.theme);
+                        log(`   → localStorage['theme'] = '${data.user.theme}'`);
+                    }
+
+                    // Check final state
+                    log(`Step 3: Checking final localStorage state...`);
+                    const finalLang = localStorage.getItem('language');
+                    log(`   localStorage['language'] = '${finalLang}'`);
+                    
+                    if (finalLang === data.user.language) {
+                        log(`✅ localStorage synced correctly!`, 'success');
+                    } else {
+                        log(`❌ localStorage NOT synced (expected '${data.user.language}', got '${finalLang}')`, 'error');
+                    }
+
+                    // Simulate LanguageService.init()
+                    log(`Step 4: Simulating LanguageService.init()...`);
+                    if (window.LanguageService) {
+                        LanguageService.init();
+                        const currentLang = LanguageService.getCurrentLanguage();
+                        log(`   LanguageService.getCurrentLanguage() = '${currentLang}'`);
+                        
+                        if (currentLang === data.user.language) {
+                            log(`✅ LanguageService initialized correctly!`, 'success');
+                        } else {
+                            log(`❌ LanguageService state incorrect (expected '${data.user.language}', got '${currentLang}')`, 'error');
+                        }
+                    }
+
+                } else {
+                    log(`❌ Login failed: ${data.message}`, 'error');
+                }
+
+                updateStatus();
+                log(`━━━━━ TEST 5 COMPLETED ━━━━━`, 'success');
+                
+            } catch (error) {
+                log(`❌ TEST 5 FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        // 🚀 INIT
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+        window.addEventListener('DOMContentLoaded', () => {
+            log('🚀 Debug page loaded', 'success');
+            log('LanguageService available: ' + (window.LanguageService ? 'Yes' : 'No'));
+            log('AuthService available: ' + (window.AuthService ? 'Yes' : 'No'));
+            updateStatus();
+        });
+
+        // Auto-update status every 2s
+        setInterval(updateStatus, 2000);
+    </script>
+</body>
+</html>

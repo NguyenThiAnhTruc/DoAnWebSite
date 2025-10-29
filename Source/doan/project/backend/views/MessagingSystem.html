@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tin nhắn - SchoolEvents</title>
+<script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<style>
+  /* Mobile: hide sidebar by translating left; open() will bring it into view */
+  .sidebar{transform:translateX(-300px);transition:transform .3s ease}
+  .sidebar.open{transform:translateX(0)}
+  .overlay-bg{background:rgba(0,0,0,.5)}
+  .scale-in { opacity:0; transform:scale(.95); }
+  .scale-in.show { opacity:1; transform:scale(1); transition:all .25s ease; }
+  .fade-up { opacity:0; transform:translateY(10px); }
+  .fade-up.show { opacity:1; transform:translateY(0); transition:all .25s ease; }
+  
+  /* On large screens (lg and up) keep the sidebar visible and disable overlay */
+  @media (min-width: 1024px) {
+    .sidebar { transform: translateX(0) !important; }
+    .overlay-bg { display: none !important; }
+  }
+</style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+
+<div id="app" class="min-h-screen flex">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl lg:shadow-none">
+    <div class="flex flex-col h-full">
+      <!-- Brand -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-10 h-10 object-contain rounded-full">
+          <span class="text-lg font-bold text-gray-900 dark:text-white">SchoolEvents</span>
+        </div>
+        <button id="btnCloseSidebar" class="lg:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800">
+          <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- User -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <i data-lucide="user" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h3 id="sidebarUserName" class="font-semibold text-gray-900 dark:text-white">Khách</h3>
+            <p id="sidebarUserRole" class="text-sm text-gray-500 dark:text-gray-400">Student</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+            <div id="upcomingCount" class="text-2xl font-bold text-blue-600">0</div>
+            <div class="text-xs text-blue-600">Sự kiện sắp tới</div>
+          </div>
+          <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 text-center">
+            <div id="joinedCount" class="text-2xl font-bold text-purple-600">0</div>
+            <div class="text-xs text-purple-600">Đã tham gia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu -->
+      <nav id="menu" class="flex-1 p-4 space-y-2">
+        <!-- populated by /public/js/navigation.js -->
+      </nav>
+
+      <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <button id="btnLogout" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 dark:bg-red-900/20 rounded-xl">
+          <i data-lucide="log-out" class="w-5 h-5"></i><span class="font-medium">Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay (mobile) -->
+  <div id="overlayMobile" class="overlay-bg fixed inset-0 z-40 lg:hidden hidden"></div>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col">
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button id="btnOpenSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800">
+            <i data-lucide="menu" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <div>
+            <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Tin nhắn</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Quản lý cuộc trò chuyện của bạn</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <!-- Notification Button with Badge -->
+          <button id="btnNotifications" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative">
+            <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="notificationBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium animate-pulse">0</span>
+          </button>
+          <!-- Notification Dropdown -->
+          <div id="notificationDropdown" class="hidden absolute right-6 top-16 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 class="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
+              <div class="flex items-center space-x-2">
+                <button id="btnMarkAllRead" class="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400">Đánh dấu đã đọc</button>
+                <button id="btnClearAllRead" class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400">Xóa đã đọc</button>
+              </div>
+            </div>
+            <div id="notificationList" class="max-h-96 overflow-y-auto">
+              <!-- Notifications will be inserted here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Message Panel (replaces modal) -->
+    <div class="flex-1 flex bg-white dark:bg-gray-800 m-4 rounded-2xl shadow-lg overflow-hidden">
+      <div id="panel" class="w-full flex">
+        <!-- Sidebar trái: danh sách hội thoại -->
+  <div class="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+          <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-500 to-purple-600">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold text-white">Danh sách tin nhắn</h2>
+              <div class="flex items-center space-x-2">
+                <button id="btnNewChat" class="p-2 hover:bg-white dark:bg-gray-800/20 rounded-lg" title="Cuộc trò chuyện mới">
+                  <i data-lucide="plus" class="w-4 h-4 text-white"></i>
+                </button>
+              </div>
+            </div>
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 text-white/70 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input id="searchConv" type="text" placeholder="Tìm kiếm cuộc trò chuyện..."
+                     class="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-800/20 border border-white/30 rounded-lg focus:ring-2 focus:ring-white/50 text-white placeholder-white/70 text-sm" />
+            </div>
+          </div>
+
+          <div id="convContainer" class="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700"></div>
+
+          <!-- Khởi tạo chat mới -->
+          <div id="newChat" class="hidden p-4">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-medium text-gray-900 dark:text-white">Bắt đầu cuộc trò chuyện</h3>
+              <button class="text-gray-500 dark:text-gray-400 hover:text-gray-700" id="closeNewChat"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div id="userList" class="space-y-2"></div>
+            <div class="text-center text-sm text-gray-500 dark:text-gray-400 mt-3">Chọn một người dùng để bắt đầu</div>
+          </div>
+        </div>
+
+        <!-- Khu chat phải -->
+        <div class="flex-1 flex flex-col">
+          <div id="chatHeader" class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 hidden">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div id="avatar" class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                  <i data-lucide="graduation-cap" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                  <h3 id="peerName" class="font-medium text-gray-900 dark:text-white"></h3>
+                  <p id="peerRole" class="text-sm text-gray-500 dark:text-gray-400 flex items-center"><span class="w-2 h-2 bg-green-500 rounded-full inline-block mr-2"></span>Sẵn sàng</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button class="p-2 hover:bg-gray-200 rounded-lg" title="Gọi thoại"><i data-lucide="phone" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i></button>
+                <button class="p-2 hover:bg-gray-200 rounded-lg" title="Cuộc gọi video"><i data-lucide="video" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i></button>
+                <button class="p-2 hover:bg-gray-200 rounded-lg" title="Khác"><i data-lucide="more-vertical" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i></button>
+              </div>
+            </div>
+          </div>
+
+          <div id="chatBody" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900 hidden"></div>
+
+          <div id="chatInput" class="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hidden">
+            <div class="flex items-end space-x-3">
+              <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 rounded-lg"><i data-lucide="paperclip" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i></button>
+              <div class="flex-1 relative">
+                <textarea id="msgInput" rows="1" placeholder="Nhập tin nhắn..." class="w-full resize-none border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500"></textarea>
+              </div>
+              <button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800 rounded-lg"><i data-lucide="smile" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i></button>
+              <button id="btnSend" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-2 rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                <i data-lucide="send" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Trạng thái rỗng -->
+          <div id="emptyState" class="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <div class="text-center">
+              <i data-lucide="message-circle" class="w-16 h-16 text-gray-400 mx-auto mb-4"></i>
+              <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Chọn cuộc trò chuyện</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">Chọn một cuộc trò chuyện để bắt đầu nhắn tin</p>
+              <button id="startNew" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg">Bắt đầu cuộc trò chuyện mới</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/notifications.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/navigation.js"></script>
+<script>
+  // ==== Sidebar Toggle (Mobile) ====
+  const sidebar = document.getElementById('sidebar');
+  const overlayMobile = document.getElementById('overlayMobile');
+  const btnOpenSidebar = document.getElementById('btnOpenSidebar');
+  const btnCloseSidebar = document.getElementById('btnCloseSidebar');
+  
+  btnOpenSidebar?.addEventListener('click', () => {
+    sidebar.classList.add('open');
+    overlayMobile.classList.remove('hidden');
+  });
+  
+  btnCloseSidebar?.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlayMobile.classList.add('hidden');
+  });
+  
+  overlayMobile?.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlayMobile.classList.add('hidden');
+  });
+
+  // ==== Logout ====
+  document.getElementById('btnLogout')?.addEventListener('click', () => {
+    if(confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('auth_token_user');
+      window.location.href = '/HomePage.html';
+    }
+  });
+
+  // ==== REAL DATA FROM API ====
+  let currentUser = null;
+  let allUsers = [];
+  let conversations = [];
+  let messageMap = {};
+  
+  // Helper to get auth headers
+  function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    };
+  }
+  
+  // Load current user from localStorage
+  function loadCurrentUser() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!user.user_id) {
+      window.location.href = '/Login.html';
+      return null;
+    }
+    currentUser = {
+      id: user.user_id,
+      name: `${user.first_name} ${user.last_name}`,
+      role: user.role
+    };
+    return currentUser;
+  }
+  
+  // Load all users from API
+  async function loadAllUsers() {
+    try {
+      const response = await fetch('/api/users', {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        // Fallback: create basic list from current user
+        allUsers = [];
+        return;
+      }
+      
+      const users = await response.json();
+      allUsers = users
+        .filter(u => u.user_id !== currentUser.id && u.user_id !== 0) // Exclude self and chatbot
+        .map(u => ({
+          id: u.user_id,
+          name: `${u.first_name} ${u.last_name}`,
+          role: u.role
+        }));
+    } catch (error) {
+      console.error('Error loading users:', error);
+      allUsers = [];
+    }
+  }
+  
+  // Load conversations from API
+  async function loadConversations() {
+    try {
+      const response = await fetch('/api/messages/conversations', {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load conversations');
+      }
+      
+      const data = await response.json();
+      conversations = data.map(conv => ({
+        id: conv.conversation_id,
+        title: conv.title,
+        participants: [currentUser.id, ...conv.other_participants.map(p => p.name)],
+        participantInfo: {
+          [currentUser.id]: currentUser,
+          ...Object.fromEntries(conv.other_participants.map(p => [
+            p.name,
+            { name: p.name, role: p.role }
+          ]))
+        },
+        lastMessage: conv.last_message ? {
+          content: conv.last_message,
+          timestamp: new Date(conv.last_message_time).getTime()
+        } : null,
+        unreadCount: conv.unread_count || 0,
+        raw: conv
+      }));
+      
+      return conversations;
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      conversations = [];
+      return [];
+    }
+  }
+  
+  // Load messages for a conversation
+  async function loadMessages(conversationId) {
+    try {
+      const response = await fetch(`/api/messages/conversations/${conversationId}/messages`, {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load messages');
+      }
+      
+      const data = await response.json();
+      messageMap[conversationId] = data.map(msg => ({
+        id: msg.message_id,
+        senderId: msg.sender_id,
+        senderRole: msg.role,
+        senderName: msg.sender_name,
+        content: msg.content,
+        timestamp: new Date(msg.sent_at).getTime()
+      }));
+      
+      return messageMap[conversationId];
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      messageMap[conversationId] = [];
+      return [];
+    }
+  }
+  
+  // Send message
+  async function sendMessageToAPI(conversationId, content) {
+    console.log('📡 sendMessageToAPI called');
+    console.log('   conversationId:', conversationId);
+    console.log('   content:', content);
+    
+    try {
+      const headers = getAuthHeaders();
+      console.log('   headers:', headers);
+      
+      const response = await fetch(`/api/messages/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ content })
+      });
+      
+      console.log('   Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Error:', errorText);
+        throw new Error('Failed to send message: ' + errorText);
+      }
+      
+      const message = await response.json();
+      console.log('✅ API Response:', message);
+      
+      return {
+        id: message.message_id,
+        senderId: currentUser.id,
+        senderRole: currentUser.role,
+        senderName: currentUser.name,
+        content: content,
+        timestamp: new Date(message.sent_at).getTime()
+      };
+    } catch (error) {
+      console.error('❌ Error in sendMessageToAPI:', error);
+      throw error;
+    }
+  }
+  
+  // Create new conversation
+  async function createConversation(participantIds, title) {
+    try {
+      const response = await fetch('/api/messages/conversations', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ participantIds, title })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create conversation');
+      }
+      
+      const data = await response.json();
+      return data.conversation_id;
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      throw error;
+    }
+  }
+
+  // ==== PHẦN TỬ ====
+  const panel = document.getElementById('panel');
+  const btnNewChat = document.getElementById('btnNewChat');
+  const startNew = document.getElementById('startNew');
+  const newChat = document.getElementById('newChat');
+  const closeNewChat = document.getElementById('closeNewChat');
+  const userList = document.getElementById('userList');
+
+  const convContainer = document.getElementById('convContainer');
+  const searchConv = document.getElementById('searchConv');
+  const emptyState = document.getElementById('emptyState');
+  const chatHeader = document.getElementById('chatHeader');
+  const chatBody = document.getElementById('chatBody');
+  const chatInput = document.getElementById('chatInput');
+  const msgInput = document.getElementById('msgInput');
+  const btnSend = document.getElementById('btnSend');
+  const peerName = document.getElementById('peerName');
+  const peerRole = document.getElementById('peerRole');
+  const avatar = document.getElementById('avatar');
+
+  let selectedConvId = null;
+
+  // ==== HÀM TIỆN ÍCH ====
+  function roleBadge(role){
+    return role==='admin' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+           role==='teacher' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+           role==='lecturer' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+           'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+  }
+  function roleIcon(role){
+    return role==='admin' ? 'crown' : 
+           (role==='teacher' || role==='lecturer' ? 'user' : 'graduation-cap');
+  }
+  function formatTime(t){ 
+    const d=new Date(t); 
+    return d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); 
+  }
+
+  // ==== DANH SÁCH USER MỚI ====
+  function renderNewChat(){
+    userList.innerHTML='';
+    allUsers.filter(u=>u.id!==currentUser.id).forEach(u=>{
+      const btn=document.createElement('button');
+      btn.className='w-full flex items-center space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900 rounded-lg';
+      btn.innerHTML=`
+        <div class="w-10 h-10 rounded-full flex items-center justify-center ${u.role==='admin'?'bg-gradient-to-r from-red-500 to-pink-600':u.role==='lecturer'?'bg-gradient-to-r from-purple-500 to-indigo-600':'bg-gradient-to-r from-blue-500 to-cyan-600'}">
+          <i data-lucide="${roleIcon(u.role)}" class="w-5 h-5 text-white"></i>
+        </div>
+          <div class="text-left flex-1">
+          <div class="font-medium text-gray-900 dark:text-white text-sm">${u.name}</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 capitalize">${u.role==='admin'?'Quản trị viên':u.role==='lecturer'?'Giảng viên':'Sinh viên'}</div>
+        </div>`;
+      btn.onclick=()=>startConversation(u);
+      userList.appendChild(btn);
+    });
+    lucide.createIcons();
+  }
+
+  async function startConversation(target){
+    try {
+      // Tìm hội thoại cũ
+      let conv = conversations.find(c => {
+        return c.raw && c.raw.other_participants && 
+               c.raw.other_participants.some(p => p.name === target.name);
+      });
+      
+      if (!conv) {
+        // Tạo conversation mới qua API
+        const title = `Chat với ${target.name}`;
+        const conversationId = await createConversation([target.id], title);
+        
+        // Reload conversations để lấy conversation mới
+        await loadConversations();
+        conv = conversations.find(c => c.id === conversationId);
+        
+        if (!conv) {
+          // Fallback: tạo local object
+          conv = {
+            id: conversationId,
+            participants: [currentUser.id, target.id],
+            participantInfo: {
+              [currentUser.id]: currentUser,
+              [target.id]: target
+            },
+            lastMessage: null,
+            unreadCount: 0
+          };
+          conversations.unshift(conv);
+        }
+      }
+      
+      // Load messages cho conversation này
+      await loadMessages(conv.id);
+      
+      selectedConvId = conv.id;
+      showChat(conv);
+      toggleNewChat(false);
+      renderConversations();
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('Không thể tạo cuộc trò chuyện. Vui lòng thử lại!');
+    }
+  }
+
+  // ==== DANH SÁCH HỘI THOẠI ====
+  function renderConversations(){
+    const q = (searchConv.value||'').toLowerCase();
+    convContainer.innerHTML='';
+    const list = conversations.filter(conv=>{
+      const other = conv.participants.find(p=>p!==currentUser.id);
+      const info = conv.participantInfo[other];
+      return !q || (info?.name||'').toLowerCase().includes(q);
+    });
+    if(list.length===0 && newChat.classList.contains('hidden')){
+      convContainer.innerHTML = `<div class="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">Chưa có cuộc trò chuyện nào</div>`;
+    }
+    list.forEach((conv,idx)=>{
+      const other = conv.participants.find(p=>p!==currentUser.id);
+      const info = conv.participantInfo[other];
+      const isSelected = conv.id===selectedConvId;
+      const row = document.createElement('div');
+      row.className = `p-4 cursor-pointer ${isSelected?'bg-blue-50':'hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900'}`;
+      row.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center ${info.role==='admin'?'bg-gradient-to-r from-red-500 to-pink-600':info.role==='lecturer'?'bg-gradient-to-r from-purple-500 to-indigo-600':'bg-gradient-to-r from-blue-500 to-cyan-600'}">
+            <i data-lucide="${roleIcon(info.role)}" class="w-6 h-6 text-white"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">${info.name}</p>
+                <span class="px-2 py-1 text-xs rounded-full ${roleBadge(info.role)}">${info.role==='admin'?'QTV':info.role==='lecturer'?'GV':'SV'}</span>
+              </div>
+              ${conv.lastMessage?`<p class="text-xs text-gray-500 dark:text-gray-400">${formatTime(conv.lastMessage.timestamp)}</p>`:''}
+            </div>
+            ${conv.lastMessage?`<p class="text-sm text-gray-600 dark:text-gray-300 truncate mt-1">${conv.lastMessage.content}</p>`:''}
+            ${conv.unreadCount>0?`<div class="flex items-center mt-2"><span class="inline-flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs rounded-full">${conv.unreadCount>9?'9+':conv.unreadCount}</span></div>`:''}
+          </div>
+        </div>`;
+      row.onclick=()=>{ selectedConvId=conv.id; showChat(conv); renderConversations(); };
+      convContainer.appendChild(row);
+      setTimeout(()=>row.classList.add('show'), 30+idx*30);
+    });
+    lucide.createIcons();
+  }
+
+  // ==== HIỂN THỊ CHAT ====
+  async function showChat(conv){
+    const other = conv.participants.find(p=>p!==currentUser.id);
+    const info = conv.participantInfo[other];
+    peerName.textContent = info.name;
+    peerRole.textContent = info.role==='admin'?'Quản trị viên':(info.role==='teacher'?'Giảng viên':'Sinh viên');
+    avatar.className = `w-12 h-12 rounded-full flex items-center justify-center ${info.role==='admin'?'bg-gradient-to-r from-purple-500 to-pink-600':'bg-gradient-to-r from-blue-500 to-purple-600'}`;
+    chatHeader.classList.remove('hidden');
+    chatBody.classList.remove('hidden');
+    chatInput.classList.remove('hidden');
+    emptyState.classList.add('hidden');
+    
+    // Load messages từ API nếu chưa có
+    if (!messageMap[conv.id]) {
+      await loadMessages(conv.id);
+    }
+    
+    renderMessages(conv);
+  }
+  
+  function renderMessages(conv) {
+    chatBody.innerHTML='';
+    const msgs = messageMap[conv.id]||[];
+    msgs.forEach((m,i)=>{
+      const isMe = m.senderId === currentUser.id;
+      const line = document.createElement('div');
+      line.className = `fade-up flex ${isMe?'justify-end':'justify-start'}`;
+      line.innerHTML = `
+        <div class="flex ${isMe?'flex-row-reverse':'flex-row'} items-start space-x-2 max-w-[70%]">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center ${isMe?'bg-gradient-to-r from-blue-500 to-purple-600':m.senderRole==='admin'?'bg-gradient-to-r from-red-500 to-pink-600':m.senderRole==='teacher'?'bg-gradient-to-r from-purple-500 to-indigo-600':'bg-gradient-to-r from-blue-500 to-cyan-600'}">
+            <i data-lucide="${roleIcon(m.senderRole)}" class="w-4 h-4 text-white"></i>
+          </div>
+          <div>
+            <div class="${isMe?'bg-gradient-to-r from-blue-500 to-purple-600 text-white':'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'} rounded-2xl px-4 py-2 shadow-sm">
+              <p class="text-sm whitespace-pre-wrap break-words">${escapeHtml(m.content)}</p>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 ${isMe?'text-right':'text-left'}">${formatTime(m.timestamp)}</p>
+          </div>
+        </div>`;
+      chatBody.appendChild(line);
+      setTimeout(()=>line.classList.add('show'), 30+i*30);
+    });
+    chatBody.scrollTop = chatBody.scrollHeight;
+    lucide.createIcons();
+    conv.unreadCount=0;
+  }
+  
+  // Helper to escape HTML
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // ==== GỬI TIN NHẮN ====
+  async function sendMessage(){
+    console.log('🔵 sendMessage() called');
+    console.log('   selectedConvId:', selectedConvId);
+    console.log('   msgInput.value:', msgInput.value);
+    
+    if(!selectedConvId) {
+      console.error('❌ No conversation selected!');
+      alert('Vui lòng chọn một cuộc trò chuyện trước!');
+      return;
+    }
+    
+    const text = msgInput.value.trim();
+    if(!text) {
+      console.error('❌ Empty message!');
+      return;
+    }
+    
+    console.log('📤 Sending message:', text);
+    
+    try {
+      // Gửi qua API
+      console.log('   Calling sendMessageToAPI...');
+      const message = await sendMessageToAPI(selectedConvId, text);
+      console.log('✅ Message sent:', message);
+      
+      // Thêm vào messageMap
+      messageMap[selectedConvId] = messageMap[selectedConvId] || [];
+      messageMap[selectedConvId].push(message);
+      console.log('   messageMap updated:', messageMap[selectedConvId].length, 'messages');
+      
+      // Update conversation
+      const conv = conversations.find(c=>c.id===selectedConvId);
+      if (conv) {
+        conv.lastMessage = { content:text, timestamp:Date.now() };
+        console.log('   Conversation updated');
+      }
+      
+      msgInput.value='';
+      renderMessages(conv);
+      renderConversations();
+      
+      // Poll for potential chatbot response (if chatbot in conversation)
+      setTimeout(async () => {
+        console.log('🔍 Polling for chatbot response...');
+        const messages = await loadMessages(selectedConvId);
+        if (messages.length > messageMap[selectedConvId].length) {
+          console.log('✅ New message detected (chatbot response)');
+          messageMap[selectedConvId] = messages;
+          renderMessages(conv);
+        }
+      }, 1500);
+      
+    } catch (error) {
+      console.error('❌ Error sending message:', error);
+      alert('Không thể gửi tin nhắn. Vui lòng thử lại!\n\nLỗi: ' + error.message);
+    }
+  }
+
+  // ==== NEW CHAT TOGGLE ====
+  function toggleNewChat(show){
+    if(show){ newChat.classList.remove('hidden'); convContainer.classList.add('hidden'); }
+    else { newChat.classList.add('hidden'); convContainer.classList.remove('hidden'); }
+  }
+
+  // ==== EVENTS ====
+  console.log('🎯 Setting up event listeners...');
+  
+  btnNewChat.onclick = ()=>{ 
+    console.log('🔘 New Chat button clicked');
+    toggleNewChat(true); 
+    renderNewChat(); 
+  };
+  
+  startNew.onclick = ()=>{ 
+    console.log('🔘 Start New button clicked');
+    toggleNewChat(true); 
+    renderNewChat(); 
+  };
+  
+  closeNewChat.onclick = ()=> {
+    console.log('🔘 Close New Chat button clicked');
+    toggleNewChat(false);
+  };
+
+  searchConv.addEventListener('input', () => {
+    console.log('🔍 Search input changed');
+    renderConversations();
+  });
+  
+  btnSend.onclick = () => {
+    console.log('🔘 Send button clicked');
+    sendMessage();
+  };
+  
+  msgInput.addEventListener('keypress', (e)=>{ 
+    if(e.key==='Enter' && !e.shiftKey){ 
+      e.preventDefault(); 
+      console.log('⌨️ Enter key pressed');
+      sendMessage(); 
+    } 
+  });
+  
+  console.log('✅ Event listeners attached');
+
+  // ==== NOTIFICATION SYSTEM ====
+  const HeaderComponent = {
+    notificationBadge: document.getElementById('notificationBadge'),
+    notificationDropdown: document.getElementById('notificationDropdown'),
+    notificationList: document.getElementById('notificationList'),
+    btnNotifications: document.getElementById('btnNotifications'),
+    btnMarkAllRead: document.getElementById('btnMarkAllRead'),
+    btnClearAllRead: document.getElementById('btnClearAllRead'),
+    
+    async updateNotificationBadge() {
+      try {
+        const userId = currentUser?.id;
+        if (!userId) return;
+        
+        const count = await NotificationService.getUnreadCount(userId);
+        if (count > 0) {
+          this.notificationBadge.textContent = count > 99 ? '99+' : count;
+          this.notificationBadge.classList.remove('hidden');
+        } else {
+          this.notificationBadge.classList.add('hidden');
+        }
+      } catch (error) {
+        console.error('Error updating notification badge:', error);
+      }
+    },
+    
+    async renderNotifications() {
+      try {
+        const userId = currentUser?.id;
+        if (!userId) return;
+        
+        const notifications = await NotificationService.getNotifications(userId, 10);
+        
+        if (!notifications || notifications.length === 0) {
+          this.notificationList.innerHTML = `
+            <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+              <i data-lucide="bell-off" class="w-12 h-12 mx-auto mb-2 text-gray-400"></i>
+              <p>Không có thông báo</p>
+            </div>`;
+          lucide.createIcons();
+          return;
+        }
+        
+        this.notificationList.innerHTML = notifications.map(n => {
+          const isUnread = !n.is_read;
+          const timeAgo = this.getTimeAgo(n.created_at);
+          
+          let iconName = 'bell';
+          let iconColor = 'text-blue-500';
+          if (n.type === 'registration_confirmed') {
+            iconName = 'check-circle';
+            iconColor = 'text-green-500';
+          } else if (n.type === 'event_reminder') {
+            iconName = 'clock';
+            iconColor = 'text-orange-500';
+          } else if (n.type === 'event_completed') {
+            iconName = 'calendar-check';
+            iconColor = 'text-purple-500';
+          } else if (n.type === 'event_cancelled') {
+            iconName = 'x-circle';
+            iconColor = 'text-red-500';
+          }
+          
+          return `
+            <div class="notification-item p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors ${isUnread ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" 
+                 data-notification-id="${n.notification_id}">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                  <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">${n.title}</p>
+                  <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">${n.message}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">${timeAgo}</p>
+                </div>
+                ${isUnread ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-blue-500 rounded-full"></div></div>' : ''}
+              </div>
+            </div>`;
+        }).join('');
+        
+        lucide.createIcons();
+        
+        document.querySelectorAll('.notification-item').forEach(item => {
+          item.addEventListener('click', () => this.handleNotificationClick(item));
+        });
+      } catch (error) {
+        console.error('Error rendering notifications:', error);
+        this.notificationList.innerHTML = `
+          <div class="p-4 text-center text-red-500">
+            <p>Lỗi tải thông báo</p>
+          </div>`;
+      }
+    },
+    
+    async handleNotificationClick(item) {
+      const notificationId = item.dataset.notificationId;
+      try {
+        await NotificationService.markAsRead(notificationId);
+        await this.updateNotificationBadge();
+        await this.renderNotifications();
+      } catch (error) {
+        console.error('Error marking notification as read:', error);
+      }
+    },
+    
+    toggleNotificationDropdown() {
+      const isHidden = this.notificationDropdown.classList.contains('hidden');
+      if (isHidden) {
+        this.notificationDropdown.classList.remove('hidden');
+        this.renderNotifications();
+      } else {
+        this.notificationDropdown.classList.add('hidden');
+      }
+    },
+    
+    getTimeAgo(timestamp) {
+      const now = new Date();
+      const time = new Date(timestamp);
+      const diffInSeconds = Math.floor((now - time) / 1000);
+      
+      if (diffInSeconds < 60) return 'Vừa xong';
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} phút trước`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} giờ trước`;
+      if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} ngày trước`;
+      return time.toLocaleDateString('vi-VN');
+    },
+    
+    init(userId) {
+      if (!userId) return;
+      
+      this.btnNotifications?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleNotificationDropdown();
+      });
+      
+      this.btnMarkAllRead?.addEventListener('click', async () => {
+        try {
+          await NotificationService.markAllAsRead(userId);
+          await this.updateNotificationBadge();
+          await this.renderNotifications();
+        } catch (error) {
+          console.error('Error marking all as read:', error);
+        }
+      });
+      
+      this.btnClearAllRead?.addEventListener('click', async () => {
+        try {
+          await NotificationService.clearReadNotifications(userId);
+          await this.updateNotificationBadge();
+          await this.renderNotifications();
+        } catch (error) {
+          console.error('Error clearing read notifications:', error);
+        }
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!this.notificationDropdown.contains(e.target) && 
+            !this.btnNotifications.contains(e.target)) {
+          this.notificationDropdown.classList.add('hidden');
+        }
+      });
+      
+      this.updateNotificationBadge();
+      
+      setInterval(() => {
+        if (!this.notificationDropdown.classList.contains('hidden')) {
+          this.renderNotifications();
+        }
+        this.updateNotificationBadge();
+      }, 30000);
+    }
+  };
+  
+  // Initialize notification system after user is loaded
+  if (currentUser?.id) {
+    HeaderComponent.init(currentUser.id);
+  }
+
+  // ==== INIT ====
+  async function initialize() {
+    console.log('🚀 Initializing Messaging System...');
+    
+    // 1. Load current user
+    console.log('1️⃣ Loading current user...');
+    if (!loadCurrentUser()) {
+      console.error('❌ No user found, redirecting to login');
+      return; // Redirected to login
+    }
+    console.log('✅ Current user loaded:', currentUser);
+    
+    // 2. Load all users for new chat
+    console.log('2️⃣ Loading all users...');
+    await loadAllUsers();
+    console.log('✅ All users loaded:', allUsers.length, 'users');
+    
+    // 3. Load conversations
+    console.log('3️⃣ Loading conversations...');
+    await loadConversations();
+    console.log('✅ Conversations loaded:', conversations.length, 'conversations');
+    
+    // 4. Render UI
+    console.log('4️⃣ Rendering UI...');
+    renderConversations();
+    lucide.createIcons();
+    console.log('✅ UI rendered');
+    
+    // 5. Setup polling for new messages (every 10 seconds)
+    console.log('5️⃣ Setting up polling (10 second interval)...');
+    setInterval(async () => {
+      if (selectedConvId) {
+        const messages = await loadMessages(selectedConvId);
+        const conv = conversations.find(c => c.id === selectedConvId);
+        if (messages.length > (messageMap[selectedConvId]?.length || 0)) {
+          messageMap[selectedConvId] = messages;
+          if (conv) {
+            renderMessages(conv);
+          }
+        }
+      }
+      
+      // Refresh conversations list
+      await loadConversations();
+      renderConversations();
+    }, 10000);
+    
+    console.log('✅ Messaging System initialized successfully!');
+  }
+  
+  // Start initialization
+  console.log('🔵 Starting initialization...');
+  initialize().catch(err => {
+    console.error('❌ Initialization error:', err);
+    alert('Có lỗi khi khởi tạo hệ thống. Vui lòng refresh trang!\n\nLỗi: ' + err.message);
+  });
+
+</script>
+</body>
+</html>

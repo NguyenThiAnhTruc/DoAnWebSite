@@ -1,0 +1,802 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quản lý sự kiện (Admin)</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <style>
+    /* Mobile: hide sidebar by translating left; open() will bring it into view */
+    .sidebar{transform:translateX(-300px);transition:transform .3s ease}
+    .sidebar.open{transform:translateX(0)}
+    .overlay{background:rgba(0,0,0,.5)}
+    .active-btn{background-image:linear-gradient(to right, #3b82f6, #9333ea); color:white; box-shadow:0 10px 15px -3px rgba(59,130,246,.2),0 4px 6px -4px rgba(147,51,234,.2);}
+
+    /* On large screens (lg and up) keep the sidebar visible and disable overlay */
+    @media (min-width: 1024px) {
+      .sidebar { transform: translateX(0) !important; }
+      .overlay { display: none !important; }
+    }
+    .fade { opacity:0; transform:translateY(10px); }
+    .fade.show { opacity:1; transform:translateY(0); transition:.25s ease; }
+    .tab-active { color:rgb(37 99 235); border-bottom-width:2px; border-color:rgb(37 99 235); background:#eff6ff; }
+</style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+<div id="app" class="min-h-screen flex">
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl lg:shadow-none">
+    <div class="flex flex-col h-full">
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-10 h-10 object-contain rounded-full">
+          <span class="text-lg font-bold text-gray-900 dark:text-white">SchoolEvents</span>
+        </div>
+        <button id="btnCloseSidebar" class="lg:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:bg-gray-800" aria-label="Đóng menu">
+          <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- User -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <i data-lucide="user" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h3 id="userName" class="font-semibold text-gray-900 dark:text-white">Admin</h3>
+            <p id="userRole" class="text-sm text-gray-500 dark:text-gray-400">Admin</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+            <div id="upcomingCount" class="text-2xl font-bold text-blue-600">0</div>
+            <div class="text-xs text-blue-600">Sự kiện sắp tới</div>
+          </div>
+          <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 text-center">
+            <div id="joinedCount" class="text-2xl font-bold text-purple-600">0</div>
+            <div class="text-xs text-purple-600">Đã tham gia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu (populated by navigation.js) -->
+      <nav id="menu" class="flex-1 p-4 space-y-2" aria-label="Menu chức năng">
+        <!-- Menu will be populated by /js/navigation.js -->
+      </nav>
+
+      <!-- Logout -->
+      <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <button id="btnLogout" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 dark:bg-red-900/20 rounded-xl">
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          <span class="font-medium">Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay (mobile) -->
+  <div id="overlay" class="overlay fixed inset-0 z-40 lg:hidden hidden"></div>
+
+  <!-- Right pane -->
+  <main class="flex-1 flex flex-col">
+    <!-- Header Component -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Left: Menu button + Title -->
+        <div class="flex items-center space-x-4">
+          <button id="btnOpenSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Mở menu">
+            <i data-lucide="menu" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <div>
+            <h1 id="pageTitle" class="text-xl font-semibold text-gray-900 dark:text-white">Quản lý sự kiện (Admin)</h1>
+            <p id="pageSubtitleHeader" class="text-sm text-gray-500 dark:text-gray-400">Bảng điều khiển & tổng quan</p>
+          </div>
+        </div>
+
+        <!-- Right: Action Icons -->
+        <div class="flex items-center space-x-3">
+          <!-- Messages Button -->
+          <a href="/MessagingSystem.html" 
+             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+             aria-label="Tin nhắn"
+             title="Tin nhắn">
+            <i data-lucide="message-circle" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="messageBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">3</span>
+          </a>
+
+          <!-- Profile Button -->
+          <a href="/UserProfile.html" 
+             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+             aria-label="Tài khoản"
+             title="Tài khoản">
+            <i data-lucide="user" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </a>
+
+          <!-- Notifications Button -->
+          <button id="btnNotifications" 
+                  class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+                  aria-label="Thông báo"
+                  title="Thông báo">
+            <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="notificationBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">5</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section id="contentRoot" class="flex-1 overflow-auto p-0">
+      <main class="p-6 max-w-7xl mx-auto">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+    <div>
+      <h2 class="text-3xl font-bold text-gray-900 dark:text-white dark:text-white mb-2">Quản lý sự kiện</h2>
+      <p class="text-gray-600 dark:text-gray-300">Tổng quan và quản lý các sự kiện trường học</p>
+    </div>
+    <div class="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+      <button id="btnNotify" class="px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 flex items-center justify-center">
+        <i data-lucide="mail" class="w-5 h-5 mr-2"></i>Gửi thông báo
+      </button>
+      <a href="/EventForm.html" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg flex items-center justify-center">
+        <i data-lucide="plus" class="w-5 h-5 mr-2"></i>Tạo sự kiện mới
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <i data-lucide="calendar" class="w-8 h-8 opacity-80"></i>
+        <i data-lucide="trending-up" class="w-5 h-5 opacity-80"></i>
+      </div>
+      <div id="stTotal" class="text-3xl font-bold mb-1">0</div>
+      <div class="text-blue-100">Tổng sự kiện</div>
+    </div>
+    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <i data-lucide="clock" class="w-8 h-8 opacity-80"></i>
+        <i data-lucide="trending-up" class="w-5 h-5 opacity-80"></i>
+      </div>
+      <div id="stUpcoming" class="text-3xl font-bold mb-1">0</div>
+      <div class="text-purple-100">Sắp diễn ra</div>
+    </div>
+    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <i data-lucide="users" class="w-8 h-8 opacity-80"></i>
+        <i data-lucide="trending-up" class="w-5 h-5 opacity-80"></i>
+      </div>
+      <div id="stRegs" class="text-3xl font-bold mb-1">0</div>
+      <div class="text-green-100">Lượt đăng ký</div>
+    </div>
+    <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-6 text-white">
+      <div class="flex items-center justify-between mb-4">
+        <i data-lucide="bar-chart-3" class="w-8 h-8 opacity-80"></i>
+        <i data-lucide="trending-up" class="w-5 h-5 opacity-80"></i>
+      </div>
+      <div id="stAvg" class="text-3xl font-bold mb-1">0</div>
+      <div class="text-orange-100">TB tham gia</div>
+    </div>
+  </section>
+
+  <!-- Tabs -->
+  <section class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border overflow-hidden">
+    <div class="border-b">
+      <nav class="flex" id="tabs">
+        <button data-tab="overview" class="flex items-center px-6 py-4 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 mr-2"></i>Tổng quan
+        </button>
+        <button data-tab="events" class="flex items-center px-6 py-4 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900">
+          <i data-lucide="calendar" class="w-5 h-5 mr-2"></i>Quản lý sự kiện
+        </button>
+        <button data-tab="reports" class="flex items-center px-6 py-4 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900">
+          <i data-lucide="download" class="w-5 h-5 mr-2"></i>Báo cáo
+        </button>
+      </nav>
+    </div>
+
+    <div class="p-6">
+      <!-- OVERVIEW -->
+      <div id="pane-overview" class="space-y-6">
+        <section>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Hoạt động gần đây</h3>
+          <div id="recentRegs" class="space-y-3"></div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+            <h4 class="font-medium text-blue-800 mb-2">Sự kiện tuần này</h4>
+            <div id="thisWeek" class="text-2xl font-bold text-blue-600">0</div>
+          </div>
+          <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+            <h4 class="font-medium text-purple-800 mb-2">Đăng ký hôm nay</h4>
+            <div id="todayRegs" class="text-2xl font-bold text-purple-600">0</div>
+          </div>
+          <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+            <h4 class="font-medium text-green-800 mb-2">Tỷ lệ tham gia</h4>
+            <div id="rate" class="text-2xl font-bold text-green-600">0%</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- EVENTS -->
+      <div id="pane-events" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white">Danh sách sự kiện</h3>
+          <button id="btnExport" class="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+            <i data-lucide="download" class="w-4 h-4 mr-2"></i>Xuất Excel
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b">
+                <th class="text-left py-3 px-4 font-semibold">Sự kiện</th>
+                <th class="text-left py-3 px-4 font-semibold">Ngày</th>
+                <th class="text-left py-3 px-4 font-semibold">Đăng ký</th>
+                <th class="text-left py-3 px-4 font-semibold">Trạng thái</th>
+                <th class="text-left py-3 px-4 font-semibold">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="tblEvents"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div id="pane-reports" class="hidden space-y-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white dark:text-white">Báo cáo thống kê</h3>
+        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-8 text-center">
+          <i data-lucide="bar-chart-3" class="w-16 h-16 text-gray-400 mx-auto mb-4"></i>
+          <h4 class="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-2">Biểu đồ thống kê</h4>
+          <p class="text-gray-600 dark:text-gray-300 mb-4">Biểu đồ sẽ hiển thị thống kê chi tiết về các sự kiện và mức độ tham gia</p>
+          <button id="btnExportReport" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Xuất báo cáo Excel</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white dark:bg-gray-800 border rounded-lg p-6">
+            <h4 class="font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Thống kê theo tháng</h4>
+            <div class="space-y-3" id="monthStats"></div>
+          </div>
+          <div class="bg-white dark:bg-gray-800 border rounded-lg p-6">
+            <h4 class="font-semibold text-gray-900 dark:text-white dark:text-white mb-4">Top sự kiện</h4>
+            <div class="space-y-3" id="topEvents"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+    </section>
+  </main>
+</div>
+
+<script src="/js/navigation.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/notifications.js"></script>
+<script src="/js/admin-dashboard.js?v=2"></script>
+<script>
+// Check access permission - Allow both admin and teacher
+(function checkAccess() {
+  try {
+    const userStr = localStorage.getItem('user') || localStorage.getItem('currentUser');
+    if (!userStr) {
+      console.warn('No user found, redirecting to login');
+      window.location.href = '/Login.html';
+      return;
+    }
+    const user = JSON.parse(userStr);
+    const role = (user.role || '').toLowerCase();
+    
+    // Allow both admin and teacher
+    if (role !== 'admin' && role !== 'teacher') {
+      console.warn('Access denied: User role is', role, '- redirecting to EventList');
+      window.location.href = '/EventList.html';
+      return;
+    }
+    
+    console.log('✅ Access granted for role:', role);
+    
+    // Update user display - wait for DOM to be ready
+    function updateUserDisplay() {
+      const roleMap = {
+        'admin': 'Quản trị viên',
+        'teacher': 'Giáo viên',
+        'student': 'Sinh viên'
+      };
+      
+      const displayName = user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || 'User';
+      const displayRole = roleMap[role] || role;
+      
+      const userNameEl = document.getElementById('userName');
+      const userRoleEl = document.getElementById('userRole');
+      
+      if (userNameEl) {
+        userNameEl.textContent = displayName;
+        console.log('✅ Updated userName:', displayName);
+      } else {
+        console.warn('⚠️ userName element not found');
+      }
+      
+      if (userRoleEl) {
+        userRoleEl.textContent = displayRole;
+        console.log('✅ Updated userRole:', displayRole);
+      } else {
+        console.warn('⚠️ userRole element not found');
+      }
+    }
+    
+    // Try to update immediately
+    if (document.readyState === 'loading') {
+      // DOM is still loading, wait for it
+      document.addEventListener('DOMContentLoaded', updateUserDisplay);
+    } else {
+      // DOM is already loaded
+      updateUserDisplay();
+    }
+  } catch (err) {
+    console.error('Access check error:', err);
+    window.location.href = '/Login.html';
+  }
+})();
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('AdminDashboard: Page loaded');
+  
+  // Setup tabs
+  const tabs = document.querySelectorAll('#tabs > button');
+  const panes = {
+    overview: document.getElementById('pane-overview'),
+    events: document.getElementById('pane-events'),
+    reports: document.getElementById('pane-reports'),
+  };
+  
+  function activateTab(id) {
+    tabs.forEach(b => b.classList.remove('tab-active'));
+    document.querySelector(`#tabs > button[data-tab="${id}"]`)?.classList.add('tab-active');
+    Object.values(panes).forEach(p => p?.classList.add('hidden'));
+    panes[id]?.classList.remove('hidden');
+  }
+  
+  tabs.forEach(b => b.onclick = () => activateTab(b.getAttribute('data-tab')));
+  
+  // Setup buttons
+  document.getElementById('btnNotify').onclick = () => {
+    const message = prompt('Nhập nội dung thông báo:');
+    if (message && message.trim()) {
+      alert('✅ Đã gửi thông báo đến tất cả sinh viên:\n"' + message + '"');
+    }
+  };
+  //Xuất 
+  document.getElementById('btnExport').onclick = () => {
+  try {
+    if (!window.AdminDashboard || !window.AdminDashboard.events) {
+      alert('Không tìm thấy dữ liệu sự kiện.');
+      return;
+    }
+
+    // Lấy dữ liệu sự kiện thực tế từ dashboard
+    const events = window.AdminDashboard.events() || [];
+    if (events.length === 0) {
+      alert('Chưa có sự kiện để xuất.');
+      return;
+    }
+
+    // Chuẩn hoá dữ liệu thành các cột dễ đọc trên Excel
+    const rows = events.map((e, idx) => {
+      // Một số key phổ biến được AdminDashboard đẩy ra: title, start, end, date, location, department, category...
+      const start = e.start || e.start_time || e.date || '';
+      const end   = e.end   || e.end_time   || '';
+      const loc   = e.location || e.place || '';
+      const dept  = e.department_name || e.department || '';
+      const cate  = e.category_name || e.category || '';
+      const cur   = (e.currentParticipants ?? e.current_participants ?? e.current ?? 0);
+      const max   = (e.maxParticipants ?? e.max_participants ?? e.capacity ?? 0);
+      const reg   = max ? `${cur}/${max}` : String(cur);
+      const status = e.status || '';
+
+      return {
+        'STT'              : idx + 1,
+        'Tên sự kiện'      : e.title || e.name || '',
+        'Bắt đầu'          : start,
+        'Kết thúc'         : end,
+        'Địa điểm'         : loc,
+        'Khoa/Đơn vị'      : dept,
+        'Loại sự kiện'     : cate,
+        'Số lượng đăng ký' : reg,
+        'Trạng thái'       : status
+      };
+    });
+
+    // Tạo worksheet & workbook bằng SheetJS
+    const ws = XLSX.utils.json_to_sheet(rows, {
+      header: ['STT','Tên sự kiện','Bắt đầu','Kết thúc','Địa điểm','Khoa/Đơn vị','Loại sự kiện','Số lượng đăng ký','Trạng thái']
+    });
+
+    // Set độ rộng cột (tuỳ chọn cho dễ đọc)
+    ws['!cols'] = [
+      { wch: 5 },   // STT
+      { wch: 40 },  // Tên sự kiện
+      { wch: 20 },  // Bắt đầu
+      { wch: 20 },  // Kết thúc
+      { wch: 24 },  // Địa điểm
+      { wch: 22 },  // Khoa/Đơn vị
+      { wch: 18 },  // Loại sự kiện
+      { wch: 18 },  // Số lượng đăng ký
+      { wch: 16 }   // Trạng thái
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Danh_sach_su_kien');
+
+    // Tạo thêm sheet TỔNG QUAN (tuỳ chọn)
+    const total = events.length;
+    const upcoming = events.filter(e => (e.status || '').toLowerCase().includes('upcoming') || (e.isUpcoming)).length;
+    const completed = events.filter(e => (e.status || '').toLowerCase().includes('completed') || (e.isCompleted)).length;
+    const sumCur = events.reduce((s, e) => s + (e.currentParticipants ?? e.current_participants ?? e.current ?? 0), 0);
+
+    const overview = [
+      { Chỉ_tiêu: 'Tổng số sự kiện', Giá_trị: total },
+      { Chỉ_tiêu: 'Sự kiện sắp diễn ra', Giá_trị: upcoming },
+      { Chỉ_tiêu: 'Sự kiện đã hoàn thành', Giá_trị: completed },
+      { Chỉ_tiêu: 'Tổng lượt đăng ký', Giá_trị: sumCur }
+    ];
+    const ws2 = XLSX.utils.json_to_sheet(overview);
+    ws2['!cols'] = [{ wch: 28 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Tong_quan');
+
+    // Tên file
+    const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    const filename = `Bao_cao_su_kien_${ts}.xlsx`;
+
+    // Xuất file
+    XLSX.writeFile(wb, filename);
+    alert('✅ Đã xuất Excel thành công!');
+  } catch (err) {
+    console.error('Export error:', err);
+    alert('❌ Lỗi khi xuất Excel.');
+  }
+};
+
+  
+  document.getElementById('btnExportReport').onclick = () => {
+  try {
+    if (!window.AdminDashboard || !window.AdminDashboard.events) {
+      alert('Không có dữ liệu báo cáo.');
+      return;
+    }
+    const events = window.AdminDashboard.events() || [];
+    if (events.length === 0) {
+      alert('Chưa có dữ liệu sự kiện.');
+      return;
+    }
+
+    // Gom nhóm theo tháng (YYYY-MM)
+    const byMonth = {};
+    events.forEach(e => {
+      const d = new Date(e.start || e.start_time || e.date || Date.now());
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      byMonth[key] = byMonth[key] || { Thang: key, So_su_kien: 0, Tong_dang_ky: 0 };
+      byMonth[key].So_su_kien += 1;
+      byMonth[key].Tong_dang_ky += (e.currentParticipants ?? e.current_participants ?? e.current ?? 0);
+    });
+
+    const monthRows = Object.values(byMonth).sort((a,b)=>a.Thang.localeCompare(b.Thang));
+
+    const wb = XLSX.utils.book_new();
+    const wsMonth = XLSX.utils.json_to_sheet(monthRows);
+    XLSX.utils.book_append_sheet(wb, wsMonth, 'Thong_ke_thang');
+
+    // Top 10 sự kiện theo lượt đăng ký
+    const top = [...events]
+      .sort((a,b)=> (b.currentParticipants ?? b.current ?? 0) - (a.currentParticipants ?? a.current ?? 0))
+      .slice(0,10)
+      .map((e,i)=>({
+        'Top': i+1,
+        'Tên sự kiện': e.title || '',
+        'Lượt đăng ký': (e.currentParticipants ?? e.current ?? 0),
+        'Trạng thái': e.status || ''
+      }));
+    const wsTop = XLSX.utils.json_to_sheet(top);
+    XLSX.utils.book_append_sheet(wb, wsTop, 'Top_su_kien');
+
+    const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    XLSX.writeFile(wb, `Thong_ke_su_kien_${ts}.xlsx`);
+    alert('✅ Đã xuất báo cáo Excel!');
+  } catch (e) {
+    console.error(e);
+    alert('❌ Lỗi khi xuất báo cáo.');
+  }
+};
+
+  
+  // Activate default tab
+  activateTab('overview');
+  
+  // Load all data from API
+  if (window.AdminDashboard && window.AdminDashboard.loadAllData) {
+    await window.AdminDashboard.loadAllData();
+  }
+  
+  // Initialize Lucide icons
+  if (window.lucide) lucide.createIcons();
+});
+
+// Setup sidebar navigation
+(function() {
+  const overlay = document.getElementById('overlay');
+  const sidebar = document.getElementById('sidebar');
+  const btnOpenSidebar = document.getElementById('btnOpenSidebar');
+  const btnCloseSidebar = document.getElementById('btnCloseSidebar');
+  
+  function openSidebar() { 
+    sidebar.classList.add('open'); 
+    overlay.classList.remove('hidden'); 
+  }
+  
+  function closeSidebar() { 
+    sidebar.classList.remove('open'); 
+    overlay.classList.add('hidden'); 
+  }
+  
+  btnOpenSidebar?.addEventListener('click', openSidebar);
+  btnCloseSidebar?.addEventListener('click', closeSidebar);
+  overlay?.addEventListener('click', closeSidebar);
+})();
+</script>
+
+<!-- Notification Dropdown Panel -->
+<div id="notificationDropdown" class="hidden fixed top-16 right-6 w-96 max-w-[calc(100vw-3rem)] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 animate-slideDown">
+  <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+    <h3 class="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
+    <button id="btnMarkAllRead" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Đánh dấu đã đọc</button>
+  </div>
+  <div id="notificationList" class="overflow-y-auto max-h-96 divide-y divide-gray-100 dark:divide-gray-700"></div>
+  <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+    <button id="btnClearAllRead" class="text-xs text-red-600 dark:text-red-400 hover:underline">Xóa đã đọc</button>
+    <a href="/NotificationList.html" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">Xem tất cả</a>
+  </div>
+</div>
+
+<!-- Header Component JavaScript -->
+<script>
+  const HeaderComponent = {
+    updateNotificationBadge: async function() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null');
+        if (!user || !user.user_id) return;
+        
+        const count = await window.NotificationService.getUnreadCount();
+        const badge = document.getElementById('notificationBadge');
+        if (count > 0) {
+          badge.textContent = count > 99 ? '99+' : count;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      } catch (error) {
+        console.error('Failed to update notification badge:', error);
+      }
+    },
+
+    updateMessageBadge: async function() {
+      try {
+        const count = 3; // Mock data
+        const badge = document.getElementById('messageBadge');
+        if (count > 0) {
+          badge.textContent = count > 99 ? '99+' : count;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      } catch (error) {
+        console.error('Failed to update message badge:', error);
+      }
+    },
+
+    renderNotifications: async function() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null');
+        if (!user || !user.user_id) return;
+        
+        const notifications = await window.NotificationService.fetchNotifications(10, false);
+        const container = document.getElementById('notificationList');
+        
+        if (!notifications || notifications.length === 0) {
+          container.innerHTML = `
+            <div class="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+              Không có thông báo mới
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = notifications.map(notif => {
+          const icon = this._getNotificationIcon(notif.type || notif.notification_type);
+          const color = this._getNotificationColor(notif.type || notif.notification_type);
+          const timeAgo = this._formatTimeAgo(notif.created_at || notif.sent_at);
+          const isUnread = !(notif.is_read || notif.read_at);
+
+          return `
+            <div class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${isUnread ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" 
+                 data-notification-id="${notif.notification_id || notif.id}"
+                 onclick="HeaderComponent.handleNotificationClick(${notif.notification_id || notif.id})">
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-10 h-10 rounded-full ${color} flex items-center justify-center">
+                  <i data-lucide="${icon}" class="w-5 h-5 text-white"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 dark:text-white">${notif.title}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">${notif.message}</p>
+                  <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">${timeAgo}</p>
+                </div>
+                ${isUnread ? '<div class="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full"></div>' : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+      } catch (error) {
+        console.error('Failed to render notifications:', error);
+      }
+    },
+
+    handleNotificationClick: async function(notificationId) {
+      try {
+        await window.NotificationService.markAsRead(notificationId);
+        await this.updateNotificationBadge();
+        await this.renderNotifications();
+        this.closeNotificationDropdown();
+      } catch (error) {
+        console.error('Failed to handle notification click:', error);
+      }
+    },
+
+    toggleNotificationDropdown: function() {
+      const dropdown = document.getElementById('notificationDropdown');
+      const isHidden = dropdown.classList.contains('hidden');
+      
+      if (isHidden) {
+        dropdown.classList.remove('hidden');
+        this.renderNotifications();
+      } else {
+        dropdown.classList.add('hidden');
+      }
+    },
+
+    closeNotificationDropdown: function() {
+      document.getElementById('notificationDropdown').classList.add('hidden');
+    },
+
+    _getNotificationIcon: function(type) {
+      const icons = {
+        event_created: 'calendar-plus',
+        event_updated: 'calendar-clock',
+        event_cancelled: 'calendar-x',
+        registration_confirmed: 'check-circle',
+        registration_cancelled: 'x-circle',
+        event_reminder: 'bell',
+        attendance_marked: 'check-square',
+        message_received: 'message-circle',
+        announcement: 'megaphone',
+        system: 'info'
+      };
+      return icons[type] || 'bell';
+    },
+
+    _getNotificationColor: function(type) {
+      const colors = {
+        event_created: 'bg-green-500',
+        event_updated: 'bg-blue-500',
+        event_cancelled: 'bg-red-500',
+        registration_confirmed: 'bg-green-500',
+        registration_cancelled: 'bg-red-500',
+        event_reminder: 'bg-yellow-500',
+        attendance_marked: 'bg-green-500',
+        message_received: 'bg-blue-500',
+        announcement: 'bg-purple-500',
+        system: 'bg-gray-500'
+      };
+      return colors[type] || 'bg-gray-500';
+    },
+
+    _formatTimeAgo: function(timestamp) {
+      const now = Date.now();
+      const time = new Date(timestamp).getTime();
+      const diff = Math.floor((now - time) / 1000);
+
+      if (diff < 60) return 'Vừa xong';
+      if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+      if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+      return new Date(timestamp).toLocaleDateString('vi-VN');
+    },
+
+    init: async function() {
+      const btnNotifications = document.getElementById('btnNotifications');
+      if (btnNotifications) {
+        btnNotifications.addEventListener('click', () => this.toggleNotificationDropdown());
+      }
+
+      const btnMarkAllRead = document.getElementById('btnMarkAllRead');
+      if (btnMarkAllRead) {
+        btnMarkAllRead.addEventListener('click', async () => {
+          try {
+            await window.NotificationService.markAllAsRead();
+            await this.updateNotificationBadge();
+            await this.renderNotifications();
+          } catch (error) {
+            console.error('Failed to mark all as read:', error);
+          }
+        });
+      }
+
+      const btnClearAllRead = document.getElementById('btnClearAllRead');
+      if (btnClearAllRead) {
+        btnClearAllRead.addEventListener('click', async () => {
+          try {
+            await window.NotificationService.clearAllRead();
+            await this.updateNotificationBadge();
+            await this.renderNotifications();
+          } catch (error) {
+            console.error('Failed to clear all read:', error);
+          }
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('notificationDropdown');
+        const btn = document.getElementById('btnNotifications');
+        if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+          this.closeNotificationDropdown();
+        }
+      });
+
+      // Initialize NotificationService
+      const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null');
+      if (user && user.user_id && window.NotificationService) {
+        await window.NotificationService.init(user.user_id);
+      }
+
+      this.updateNotificationBadge();
+      this.updateMessageBadge();
+      setInterval(() => this.updateNotificationBadge(), 30000);
+      setInterval(() => this.updateMessageBadge(), 60000);
+
+      window.addEventListener('notifications-updated', () => {
+        this.updateNotificationBadge();
+      });
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => HeaderComponent.init());
+  } else {
+    HeaderComponent.init();
+  }
+</script>
+
+<style>
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-slideDown { animation: slideDown 0.2s ease-out; }
+  #notificationBadge.hidden, #messageBadge.hidden { display: none; }
+  #notificationBadge:not(.hidden), #messageBadge:not(.hidden) { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+</style>
+
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test QR Code - QRCodeJS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="/js/theme.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #qrcode {
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .info {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            color: #1976d2;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Tạo Mã QR với QRCodeJS</h1>
+        <p>Trang test sử dụng thư viện QRCodeJS (giống trang chính)</p>
+        
+        <button onclick="generateTestQR()">🎯 Tạo QR Code Test</button>
+        <button onclick="clearQR()">🗑️ Xóa QR</button>
+        
+        <div id="result"></div>
+        <div id="qrcode"></div>
+        
+        <div class="info">
+            <strong>URL Test:</strong><br>
+            <small id="urlDisplay">Chưa tạo</small>
+        </div>
+    </div>
+    
+    <script>
+        console.log('QRCode library available:', typeof QRCode !== 'undefined');
+        
+        let qrcodeInstance = null;
+        
+        function generateTestQR() {
+            const qrcodeDiv = document.getElementById('qrcode');
+            const resultDiv = document.getElementById('result');
+            const urlDisplay = document.getElementById('urlDisplay');
+            
+            // Clear previous QR
+            qrcodeDiv.innerHTML = '';
+            
+            // Test URL
+            const url = 'http://localhost:3000/StudentQRLogin.html?qr=e2|checkin|' + Date.now();
+            urlDisplay.textContent = url;
+            
+            console.log('Generating QR for:', url);
+            console.log('QRCode type:', typeof QRCode);
+            
+            try {
+                if (typeof QRCode === 'undefined') {
+                    throw new Error('QRCode library not loaded');
+                }
+                
+                // Create QR code
+                qrcodeInstance = new QRCode(qrcodeDiv, {
+                    text: url,
+                    width: 300,
+                    height: 300,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                resultDiv.innerHTML = '<p class="success">✅ Tạo QR thành công!</p>';
+                console.log('✅ QR Code created successfully!');
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<p class="error">❌ Lỗi: ' + error.message + '</p>';
+                qrcodeDiv.innerHTML = '<p class="error">Không thể tạo QR code</p>';
+            }
+        }
+        
+        function clearQR() {
+            document.getElementById('qrcode').innerHTML = '';
+            document.getElementById('result').innerHTML = '';
+            document.getElementById('urlDisplay').textContent = 'Chưa tạo';
+            qrcodeInstance = null;
+        }
+        
+        // Auto generate on load after library is ready
+        window.onload = function() {
+            console.log('Page loaded, waiting for QRCode library...');
+            setTimeout(() => {
+                if (typeof QRCode !== 'undefined') {
+                    generateTestQR();
+                } else {
+                    document.getElementById('result').innerHTML = 
+                        '<p class="error">❌ Thư viện QRCode chưa được tải. Click nút để thử lại.</p>';
+                }
+            }, 500);
+        };
+    </script>
+</body>
+</html>

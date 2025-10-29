@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Điểm danh QR - Hệ thống quản lý sự kiện</title>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card-hover {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .qr-animation {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+      <div class="flex flex-col h-full">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-12 h-12 object-contain rounded-full">
+              <div>
+                <h1 class="text-xl font-bold text-gray-900">SchoolEvents</h1>
+                <p class="text-xs text-gray-500">Event Management</p>
+              </div>
+            </div>
+            <button id="sidebarClose" class="lg:hidden p-2 rounded-lg hover:bg-gray-100">
+              <i data-lucide="x" class="w-5 h-5 text-gray-600"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-6 border-b border-gray-200">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <i data-lucide="user" class="w-6 h-6 text-white"></i>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-900">Khách</h3>
+              <p class="text-sm text-gray-500">Student</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="p-6 border-b border-gray-200">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-blue-50 rounded-lg p-3 text-center">
+              <div class="text-2xl font-bold text-blue-600">2</div>
+              <div class="text-xs text-blue-600">Sự kiện sắp tới</div>
+            </div>
+            <div class="bg-purple-50 rounded-lg p-3 text-center">
+              <div class="text-2xl font-bold text-purple-600">1</div>
+              <div class="text-xs text-purple-600">Đã tham gia</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+          <nav id="menu" class="flex-1 p-4 space-y-2" aria-label="Menu chức năng">
+            <a href="/EventList.html" data-route="/EventList.html" class="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+              <i data-lucide="calendar" class="w-5 h-5"></i>
+              <span class="font-medium">Sự kiện</span>
+            </a>
+            <a href="/EventList.html?mine=1" data-route="/EventList.html?mine=1" class="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+              <i data-lucide="clock" class="w-5 h-5"></i>
+              <span class="font-medium">Sự kiện của tôi</span>
+            </a>
+            <a href="/QRAttendance_new.html" data-route="/QRAttendance_new.html" class="w-full flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg rounded-xl transition-all">
+              <i data-lucide="user-check" class="w-5 h-5"></i>
+              <span class="font-medium">Điểm danh QR</span>
+            </a>
+            <a href="/MessagingSystem.html" data-route="/MessagingSystem.html" class="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+              <i data-lucide="message-circle" class="w-5 h-5"></i>
+              <span class="font-medium">Tin nhắn</span>
+            </a>
+            <a href="/ContactSupport.html" data-route="/ContactSupport.html" class="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+              <i data-lucide="headphones" class="w-5 h-5"></i>
+              <span class="font-medium">Liên hệ</span>
+            </a>
+            <a href="/UserProfile.html" data-route="/UserProfile.html" class="w-full flex items-center space-x-3 px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-all">
+              <i data-lucide="settings" class="w-5 h-5"></i>
+              <span class="font-medium">Cài đặt</span>
+            </a>
+          </nav>
+
+        <!-- Footer -->
+          <div class="p-4 border-t border-gray-200">
+            <button id="btnLogout" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all">
+              <i data-lucide="log-out" class="w-5 h-5"></i>
+              <span class="font-medium">Đăng xuất</span>
+            </button>
+          </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 lg:ml-72">
+      <!-- Top Bar -->
+      <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <button id="sidebarToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-100">
+              <i data-lucide="menu" class="w-5 h-5 text-gray-600"></i>
+            </button>
+            <div>
+              <h1 class="text-xl font-semibold text-gray-900">Điểm danh QR</h1>
+              <p class="text-sm text-gray-500">Quét mã QR để điểm danh sự kiện</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button class="p-2 rounded-lg hover:bg-gray-100" title="Thông báo">
+              <i data-lucide="bell" class="w-5 h-5 text-gray-600"></i>
+            </button>
+            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <i data-lucide="user" class="w-4 h-4 text-white"></i>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="p-6">
+        <!-- QR Scanner Section -->
+        <div class="max-w-4xl mx-auto">
+          <!-- Header -->
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Điểm danh bằng QR Code</h2>
+            <p class="text-gray-600">Quét mã QR từ sự kiện để thực hiện điểm danh nhanh chóng</p>
+          </div>
+
+          <!-- QR Scanner Card -->
+          <div class="bg-white rounded-2xl shadow-lg border p-8 mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+              <!-- QR Scanner Area -->
+              <div class="text-center">
+                <div class="relative mx-auto w-64 h-64 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center qr-animation">
+                  <div class="w-48 h-48 border-4 border-dashed border-blue-400 rounded-xl flex items-center justify-center">
+                    <i data-lucide="qr-code" class="w-24 h-24 text-blue-500"></i>
+                  </div>
+                  <!-- Scanner Frame -->
+                  <div class="absolute inset-4 border-2 border-blue-500 rounded-xl pointer-events-none">
+                    <div class="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500"></div>
+                    <div class="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500"></div>
+                    <div class="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500"></div>
+                    <div class="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500"></div>
+                  </div>
+                </div>
+                <p class="text-gray-600 mt-4">Đưa camera đến mã QR để quét</p>
+                <button class="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center mx-auto">
+                  <i data-lucide="camera" class="w-5 h-5 mr-2"></i>
+                  Bật Camera
+                </button>
+              </div>
+
+              <!-- Instructions -->
+              <div class="space-y-6">
+                <h3 class="text-xl font-bold text-gray-900">Hướng dẫn điểm danh</h3>
+                
+                <div class="space-y-4">
+                  <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span class="text-blue-600 font-bold text-sm">1</span>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-900">Tìm mã QR sự kiện</h4>
+                      <p class="text-gray-600 text-sm">Mã QR thường được hiển thị tại bàn đăng ký hoặc màn hình sự kiện</p>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span class="text-green-600 font-bold text-sm">2</span>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-900">Quét mã QR</h4>
+                      <p class="text-gray-600 text-sm">Nhấn "Bật Camera" và đưa camera đến mã QR để quét</p>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span class="text-purple-600 font-bold text-sm">3</span>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-gray-900">Hoàn tất điểm danh</h4>
+                      <p class="text-gray-600 text-sm">Hệ thống sẽ tự động xác nhận và ghi nhận điểm danh của bạn</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-blue-50 rounded-lg p-4">
+                  <div class="flex items-center space-x-2">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-600"></i>
+                    <span class="text-blue-800 font-medium">Lưu ý</span>
+                  </div>
+                  <p class="text-blue-700 text-sm mt-2">
+                    Đảm bảo bạn đã đăng ký tham gia sự kiện trước khi thực hiện điểm danh
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Attendance History -->
+          <div class="bg-white rounded-2xl shadow-lg border p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xl font-bold text-gray-900">Lịch sử điểm danh gần đây</h3>
+              <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                Xem tất cả
+              </button>
+            </div>
+
+            <div class="space-y-4">
+              <!-- Attendance Record 1 -->
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div class="flex items-center space-x-4">
+                  <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="check" class="w-6 h-6 text-white"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-gray-900">Hội thảo Công nghệ thông tin 2024</h4>
+                    <p class="text-gray-600 text-sm">Đã điểm danh • 15/03/2024 • 14:05</p>
+                  </div>
+                </div>
+                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                  Thành công
+                </span>
+              </div>
+
+              <!-- Attendance Record 2 -->
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div class="flex items-center space-x-4">
+                  <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="clock" class="w-6 h-6 text-white"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-gray-900">Workshop Thiết kế đồ họa</h4>
+                    <p class="text-gray-600 text-sm">Đang chờ • 25/03/2024 • 09:00</p>
+                  </div>
+                </div>
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                  Đang chờ
+                </span>
+              </div>
+
+              <!-- No records message -->
+              <div class="text-center py-8 text-gray-500">
+                <i data-lucide="calendar-x" class="w-12 h-12 mx-auto mb-3 text-gray-400"></i>
+                <p>Chưa có lịch sử điểm danh nào khác</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Overlay for mobile sidebar -->
+  <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+    
+    // Sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarClose = document.getElementById('sidebarClose');
+    
+    function openSidebar() {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+    }
+    
+    function closeSidebar() {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    }
+    
+    sidebarToggle.addEventListener('click', openSidebar);
+    sidebarClose.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+
+    // Check authentication
+    function checkAuthentication() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null');
+        return user && user.user_id;
+      } catch(e) {
+        return false;
+      }
+    }
+
+    // Get current user
+    function getCurrentUser() {
+      try {
+        return JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null');
+      } catch(e) {
+        return null;
+      }
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-lg transition-all transform ${
+        type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+      } text-white font-medium`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.transform = 'translateX(400px)';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Process QR attendance
+    async function processQRAttendance(eventId) {
+      // Check if user is logged in
+      if (!checkAuthentication()) {
+        // Redirect to QR check-in page for login
+        showNotification('Vui lòng đăng nhập để điểm danh', 'error');
+        setTimeout(() => {
+          window.location.href = '/QRCheckInPage.html?eventId=' + eventId;
+        }, 1500);
+        return;
+      }
+
+      const user = getCurrentUser();
+      
+      try {
+        // Call attendance API (updated endpoint)
+        const response = await fetch('/api/attendance/qr-checkin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('auth_token_user') || ''}`
+          },
+          body: JSON.stringify({
+            eventId: parseInt(eventId),
+            userId: user.user_id || user.id || user.userId,
+            qrCode: `QR_${eventId}_${user.user_id || user.id}_${Date.now()}`
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          showNotification('✅ Điểm danh thành công!', 'success');
+          
+          // Update UI to show success
+          const qrArea = document.querySelector('.qr-animation');
+          if (qrArea) {
+            qrArea.classList.remove('bg-gradient-to-br', 'from-blue-100', 'to-purple-100');
+            qrArea.classList.add('bg-green-100');
+          }
+          
+          // Reload attendance history after 2 seconds
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          showNotification(data.message || 'Điểm danh thất bại. Vui lòng thử lại.', 'error');
+        }
+      } catch (error) {
+        console.error('Attendance error:', error);
+        showNotification('Lỗi kết nối. Vui lòng thử lại sau.', 'error');
+      }
+    }
+
+    // QR Scanner simulation
+    document.addEventListener('DOMContentLoaded', function() {
+      const cameraBtn = document.querySelector('button:has([data-lucide="camera"])');
+      
+      if (cameraBtn) {
+        cameraBtn.addEventListener('click', function() {
+          // Simulate camera activation
+          this.innerHTML = '<i data-lucide="loader" class="w-5 h-5 mr-2 animate-spin"></i>Đang khởi động camera...';
+          this.disabled = true;
+          lucide.createIcons();
+          
+          setTimeout(() => {
+            this.innerHTML = '<i data-lucide="camera-off" class="w-5 h-5 mr-2"></i>Đang quét...';
+            this.disabled = false;
+            lucide.createIcons();
+            
+            // Simulate QR code scan (in production, use real QR scanner library)
+            // For demo: simulate successful scan after 2 seconds
+            setTimeout(() => {
+              // Extract event ID from scanned QR code
+              // In production, this would come from actual QR scan
+              const mockEventId = '1'; // Replace with actual scanned event ID
+              
+              processQRAttendance(mockEventId);
+              
+              this.innerHTML = '<i data-lucide="camera" class="w-5 h-5 mr-2"></i>Bật Camera';
+              lucide.createIcons();
+            }, 2000);
+          }, 1000);
+        });
+      }
+
+      // Bind sidebar navigation
+      document.querySelectorAll('#sidebar [data-route]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const route = btn.getAttribute('data-route');
+          if(route) window.location.href = route;
+        });
+      });
+
+      // Bind logout
+      const logoutBtn = document.getElementById('btnLogout');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+            localStorage.clear();
+            window.location.href = '/Login.html';
+          }
+        });
+      }
+    });
+  </script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>
+<script src="/js/navigation.js"></script>

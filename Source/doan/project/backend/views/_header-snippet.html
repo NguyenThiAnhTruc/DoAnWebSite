@@ -1,0 +1,101 @@
+﻿<!-- STANDARDIZED HEADER COMPONENT -->
+<!-- Copy this section to replace your existing header -->
+
+<!-- Header CSS (place in <head> or before </body>) -->
+<style>
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-slideDown {
+    animation: slideDown 0.2s ease-out;
+  }
+  #notificationBadge.hidden,
+  #messageBadge.hidden {
+    display: none;
+  }
+  #notificationBadge:not(.hidden),
+  #messageBadge:not(.hidden) {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+</style>
+
+<!-- Header Component HTML -->
+<header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+  <div class="flex items-center justify-between">
+    <!-- Left: Menu button + Title -->
+    <div class="flex items-center space-x-4">
+      <button id="btnOpenSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Mở menu">
+        <i data-lucide="menu" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+      </button>
+      <div>
+        <h1 id="pageTitle" class="text-xl font-semibold text-gray-900 dark:text-white">Tiêu đề trang</h1>
+        <p id="pageSubtitleHeader" class="text-sm text-gray-500 dark:text-gray-400">Mô tả trang</p>
+      </div>
+    </div>
+
+    <!-- Right: Action Icons -->
+    <div class="flex items-center space-x-3">
+      <!-- Messages Button -->
+      <a href="/MessagingSystem.html" 
+         class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+         aria-label="Tin nhắn"
+         title="Tin nhắn">
+        <i data-lucide="message-circle" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+        <span id="messageBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">3</span>
+      </a>
+
+      <!-- Profile Button -->
+      <a href="/UserProfile.html" 
+         class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+         aria-label="Tài khoản"
+         title="Tài khoản">
+        <i data-lucide="user" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+      </a>
+
+      <!-- Notifications Button -->
+      <button id="btnNotifications" 
+              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+              aria-label="Thông báo"
+              title="Thông báo">
+        <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+        <span id="notificationBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">5</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Notification Dropdown Panel (place before </body>) -->
+<div id="notificationDropdown" class="hidden fixed top-16 right-6 w-96 max-w-[calc(100vw-3rem)] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 animate-slideDown">
+  <!-- Header -->
+  <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+    <h3 class="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
+    <button id="btnMarkAllRead" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+      Đánh dấu đã đọc
+    </button>
+  </div>
+
+  <!-- Notification List -->
+  <div id="notificationList" class="overflow-y-auto max-h-96 divide-y divide-gray-100 dark:divide-gray-700">
+    <!-- Notifications will be rendered here -->
+  </div>
+
+  <!-- Footer -->
+  <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+    <button id="btnClearAllRead" class="text-xs text-red-600 dark:text-red-400 hover:underline">
+      Xóa đã đọc
+    </button>
+    <a href="/NotificationList.html" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+      Xem tất cả
+    </a>
+  </div>
+</div>
+
+<!-- Header Component Script (place before </body>, after other JS files) -->
+<script src="/js/header-component.js"></script>

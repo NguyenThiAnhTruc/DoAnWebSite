@@ -1,0 +1,867 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SchoolEvents - Danh sách sự kiện</title>
+
+  <!-- Tailwind & Lucide -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <style>
+    /* Sidebar slide (mobile) */
+    .sidebar { transform: translateX(-300px); transition: transform .3s ease; }
+    .sidebar.open { transform: translateX(0); }
+    .overlay { background: rgba(0,0,0,.5); }
+
+    /* On large screens keep sidebar visible */
+    @media (min-width: 1024px) {
+      .sidebar { transform: translateX(0) !important; }
+      .overlay { display: none !important; }
+    }
+
+    /* Card effects */
+    .card-hover { transition: transform .25s ease, box-shadow .25s ease; }
+    .card-hover:hover { transform: translateY(-2px) scale(1.02); }
+    .img-zoom { transition: transform .3s ease; }
+    .group:hover .img-zoom { transform: scale(1.05); }
+    
+    /* Truncate text */
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen">
+
+<div id="app" class="min-h-screen flex">
+
+  <!-- Sidebar (left) -->
+  <aside id="sidebar" class="sidebar fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl lg:shadow-none">
+    <div class="flex flex-col h-full">
+      <!-- Brand -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <img src="/images/logo-dai-hoc-da-lat.jpg" alt="Logo Đại học Đà Lạt" class="w-10 h-10 object-contain rounded-full">
+          <span class="text-lg font-bold text-gray-900 dark:text-white">SchoolEvents</span>
+        </div>
+        <button id="btnCloseSidebar" class="lg:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Đóng">
+          <i data-lucide="x" class="w-5 h-5 text-gray-500 dark:text-gray-400"></i>
+        </button>
+      </div>
+
+      <!-- User -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <i data-lucide="user" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h3 id="userName" class="font-semibold text-gray-900 dark:text-white">Khách</h3>
+            <p id="userRole" class="text-sm text-gray-500 dark:text-gray-400">Student</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 text-center">
+            <div id="upcomingCount" class="text-2xl font-bold text-blue-600">0</div>
+            <div class="text-xs text-blue-600">Sự kiện sắp tới</div>
+          </div>
+          <div class="bg-purple-50 rounded-lg p-3 text-center">
+            <div id="joinedCount" class="text-2xl font-bold text-purple-600">0</div>
+            <div class="text-xs text-purple-600">Đã tham gia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu (populated by navigation.js) -->
+      <nav id="menu" class="flex-1 p-4 space-y-2">
+        <!-- Menu will be populated by /js/navigation.js -->
+      </nav>
+
+      <!-- Logout -->
+      <div class="p-4 border-t border-gray-200">
+        <button id="btnLogout" class="w-full flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl">
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          <span class="font-medium">Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay (mobile) -->
+  <div id="overlay" class="overlay fixed inset-0 z-40 lg:hidden hidden"></div>
+
+  <!-- Main (right) -->
+  <main class="flex-1 flex flex-col">
+    <!-- Header Component -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <!-- Left: Menu button + Title -->
+        <div class="flex items-center space-x-4">
+          <button id="btnOpenSidebar" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" aria-label="Mở menu">
+            <i data-lucide="menu" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <div>
+            <h1 id="pageTitle" class="text-xl font-semibold text-gray-900 dark:text-white">Sự kiện</h1>
+            <p id="pageSubtitleHeader" class="text-sm text-gray-500 dark:text-gray-400">Khám phá các sự kiện thú vị</p>
+          </div>
+        </div>
+
+        <!-- Right: Action Icons -->
+        <div class="flex items-center space-x-3">
+          <!-- Search Button (optional) -->
+          <button id="btnHeaderSearch" 
+                  class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" 
+                  aria-label="Tìm kiếm"
+                  title="Tìm kiếm">
+            <i data-lucide="search" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </button>
+
+          <!-- Messages Button -->
+          <a href="/MessagingSystem.html" 
+             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+             aria-label="Tin nhắn"
+             title="Tin nhắn">
+            <i data-lucide="message-circle" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="messageBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">3</span>
+          </a>
+
+          <!-- Profile Button -->
+          <a href="/UserProfile.html" 
+             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+             aria-label="Tài khoản"
+             title="Tài khoản">
+            <i data-lucide="user" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+          </a>
+
+          <!-- Notifications Button -->
+          <button id="btnNotifications" 
+                  class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative" 
+                  aria-label="Thông báo"
+                  title="Thông báo">
+            <i data-lucide="bell" class="w-5 h-5 text-gray-600 dark:text-gray-300"></i>
+            <span id="notificationBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">5</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <section class="flex-1 overflow-auto p-6">
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Tất cả sự kiện</h2>
+        <p id="pageSubtitle" class="text-gray-600">Có 3 sự kiện phù hợp</p>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Search Input -->
+          <div class="relative">
+            <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input 
+              id="searchInput" 
+              type="text" 
+              placeholder="Tìm kiếm sự kiện..." 
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <!-- Category Filter -->
+          <select 
+            id="filterCategory" 
+            class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Tất cả thể loại</option>
+            <option value="Hội thảo">Hội thảo</option>
+            <option value="Cuộc thi">Cuộc thi</option>
+            <option value="Workshop">Workshop</option>
+            <option value="Sinh hoạt">Sinh hoạt</option>
+            <option value="Thể thao">Thể thao</option>
+            <option value="Văn hóa">Văn hóa</option>
+            <option value="Khoa học">Khoa học</option>
+            <option value="Tình nguyện">Tình nguyện</option>
+          </select>
+
+          <!-- Department/Organizer Filter -->
+          <select 
+            id="filterDepartment" 
+            class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Tất cả khoa/ban</option>
+            <option value="Công nghệ thông tin">Công nghệ thông tin</option>
+            <option value="Kinh tế">Kinh tế</option>
+            <option value="Ngoại ngữ">Ngoại ngữ</option>
+            <option value="Mỹ thuật ứng dụng">Mỹ thuật ứng dụng</option>
+            <option value="Du lịch">Du lịch</option>
+          </select>
+
+          <!-- Status Filter -->
+          <select 
+            id="filterStatus" 
+            class="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="upcoming">Sắp diễn ra</option>
+            <option value="ongoing">Đang diễn ra</option>
+            <option value="completed">Đã kết thúc</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Event cards grid -->
+      <div id="eventGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ===== RENDER ===== */
+let eventsCache = [];
+let filteredEvents = [];
+
+function renderCounts() {
+  // Count from ALL events (eventsCache), not filtered
+  const upcomingCount = eventsCache.filter(e => 
+    e.status === 'upcoming' || 
+    e.status === 'Sắp diễn ra' || 
+    e.status === 'published'
+  ).length;
+  
+  // Only count events where is_registered is explicitly true or 1
+  const joined = eventsCache.filter(e => e.is_registered === true || e.is_registered === 1).length;
+  
+  console.log('📊 Stats - Upcoming:', upcomingCount, 'Joined:', joined);
+  console.log('   Sample events is_registered:', eventsCache.slice(0, 3).map(e => ({title: e.title, is_registered: e.is_registered})));
+  
+  document.getElementById("upcomingCount").textContent = upcomingCount || 0;
+  document.getElementById("joinedCount").textContent = joined || 0;
+  
+  // Update subtitle with filtered count
+  const displayCount = (filteredEvents.length > 0 || 
+                       document.getElementById('searchInput')?.value || 
+                       document.getElementById('filterCategory')?.value || 
+                       document.getElementById('filterDepartment')?.value ||
+                       document.getElementById('filterStatus')?.value)
+                       ? filteredEvents.length : eventsCache.length;
+  document.getElementById("pageSubtitle").textContent = `Có ${displayCount} sự kiện phù hợp`;
+}
+
+/* ===== SEARCH & FILTER ===== */
+function applyFilters() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const categoryFilter = document.getElementById('filterCategory').value;
+  const departmentFilter = document.getElementById('filterDepartment').value;
+  const statusFilter = document.getElementById('filterStatus').value;
+
+  console.log('Applying filters:', { searchTerm, categoryFilter, departmentFilter, statusFilter });
+
+  filteredEvents = eventsCache.filter(event => {
+    // Search filter
+    const matchesSearch = !searchTerm || 
+      (event.title && event.title.toLowerCase().includes(searchTerm)) ||
+      (event.description && event.description.toLowerCase().includes(searchTerm)) ||
+      (event.organizer && event.organizer.toLowerCase().includes(searchTerm));
+
+    // Category filter - match by category name
+    const matchesCategory = !categoryFilter || 
+      event.category === categoryFilter ||
+      (event.category && event.category.toLowerCase() === categoryFilter.toLowerCase());
+
+    // Department/Organizer filter - check both organizer and department fields
+    const matchesDepartment = !departmentFilter || 
+      event.organizer === departmentFilter ||
+      event.department === departmentFilter ||
+      (event.organizer && event.organizer.includes(departmentFilter)) ||
+      (event.department && event.department.includes(departmentFilter));
+
+    // Status filter - normalize status values
+    let matchesStatus = true;
+    if (statusFilter) {
+      const eventStatus = (event.status || '').toLowerCase();
+      const filterStatus = statusFilter.toLowerCase();
+      
+      matchesStatus = eventStatus === filterStatus ||
+        (filterStatus === 'upcoming' && (eventStatus === 'upcoming' || eventStatus === 'published' || eventStatus === 'sắp diễn ra')) ||
+        (filterStatus === 'ongoing' && (eventStatus === 'ongoing' || eventStatus === 'đang diễn ra')) ||
+        (filterStatus === 'completed' && (eventStatus === 'completed' || eventStatus === 'đã kết thúc'));
+    }
+
+    const matches = matchesSearch && matchesCategory && matchesDepartment && matchesStatus;
+    
+    // Debug log for first event
+    if (event === eventsCache[0]) {
+      console.log('First event filter check:', {
+        event: event.title,
+        category: event.category,
+        status: event.status,
+        matchesSearch,
+        matchesCategory,
+        matchesDepartment,
+        matchesStatus,
+        finalMatch: matches
+      });
+    }
+
+    return matches;
+  });
+
+  console.log(`Filtered ${filteredEvents.length} events from ${eventsCache.length} total`);
+  
+  renderFilteredEvents();
+  renderCounts();
+}
+
+function renderFilteredEvents() {
+  const grid = document.getElementById("eventGrid");
+  const displayEvents = filteredEvents.length > 0 || document.getElementById('searchInput').value || 
+                        document.getElementById('filterCategory').value || 
+                        document.getElementById('filterDepartment').value ||
+                        document.getElementById('filterStatus').value
+                        ? filteredEvents : eventsCache;
+  
+  if (displayEvents.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-full text-center py-12">
+        <i data-lucide="calendar-x" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+        <p class="text-gray-500 text-lg">Không tìm thấy sự kiện nào phù hợp</p>
+        <button onclick="clearFilters()" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          Xóa bộ lọc
+        </button>
+      </div>`;
+  } else {
+    grid.innerHTML = displayEvents.map(eventCard).join('');
+  }
+  
+  if (window.lucide && lucide.createIcons) lucide.createIcons();
+}
+
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterDepartment').value = '';
+  document.getElementById('filterStatus').value = '';
+  filteredEvents = [...eventsCache];
+  renderFilteredEvents();
+  renderCounts();
+}
+
+function eventCard(ev) {
+  return `
+  <a href="/events/${ev.id}" class="block focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-2xl">
+  <div role="button" tabindex="0" class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl group card-hover">
+    <div class="relative">
+      <img src="${ev.image}" alt="${ev.title}" class="w-full h-48 object-cover img-zoom" />
+      <div class="absolute top-4 left-4">
+        <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">${ev.status}</span>
+      </div>
+      <div class="absolute top-4 right-4">
+        <span class="bg-white/90 px-3 py-1 rounded-full text-xs font-medium text-gray-700">${ev.category}</span>
+      </div>
+    </div>
+    <div class="p-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600">${ev.title}</h3>
+      <p class="text-gray-600 mb-4">${ev.description}</p>
+      <div class="space-y-2 mb-4 text-sm text-gray-500">
+        <div class="flex items-center"><i data-lucide="calendar" class="w-4 h-4 mr-2"></i>${ev.date} • ${ev.time}</div>
+        <div class="flex items-center"><i data-lucide="map-pin" class="w-4 h-4 mr-2"></i>${ev.location}</div>
+        <div class="flex items-center"><i data-lucide="building-2" class="w-4 h-4 mr-2"></i>${ev.organizer}</div>
+      </div>
+      <div class="flex items-center text-sm text-gray-600">
+        <i data-lucide="users" class="w-4 h-4 mr-1"></i>${ev.current_participants || ev.currentParticipants || ev.participants || ''}${ev.max_participants?('/'+ev.max_participants):ev.maxParticipants?('/'+ev.maxParticipants):''}
+      </div>
+    </div>
+  </div>`;
+}
+
+async function fetchEvents(onlyMine = false) {
+  const grid = document.getElementById("eventGrid");
+  grid.innerHTML = '<div class="col-span-full text-center text-gray-500">Đang tải...</div>';
+
+  let user = null;
+  try { user = (window.AuthService && AuthService.currentUser()) || JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null'); } catch(e){ user = null; }
+
+  console.log('Fetching events - onlyMine:', onlyMine, 'user:', user);
+
+  try {
+    const params = new URLSearchParams();
+    if (user) {
+      // Always pass UserId to get is_registered flag
+      params.set('UserId', user.user_id || user.id || user.userId || '');
+    }
+    const url = '/api/events' + (params.toString() ? ('?' + params.toString()) : '');
+    console.log('Fetch URL:', url);
+    
+    const resp = window.AuthService ? await AuthService.authFetch(url) : await fetch(url);
+    const data = await resp.json();
+    
+    console.log('API Response:', data);
+
+    // Normalize different response shapes
+    let list = [];
+    if (Array.isArray(data)) list = data;
+    else if (data.events) list = data.events;
+    else if (data.data && Array.isArray(data.data)) list = data.data;
+    else if (data.rows) list = data.rows;
+    else list = [];
+
+    console.log('Normalized list length:', list.length);
+
+    // Map to a consistent shape where possible
+    eventsCache = list.map(ev => ({
+      id: ev.id || ev.event_id || ev.eventId || String(ev.event_id || ev.id),
+      title: ev.title || ev.name,
+      description: ev.short_description || ev.description || ev.summary || '',
+      date: ev.start_date || ev.date,
+      time: ev.start_time || ev.time,
+      location: ev.location,
+      organizer: ev.organizer || ev.department || (ev.organizer && (ev.organizer.first_name ? ev.organizer.first_name + ' ' + ev.organizer.last_name : ev.organizer.name)) || '',
+      department: ev.department || ev.department_name || '',
+      category: ev.category || ev.category_name,
+      category_id: ev.category_id,
+      image: ev.image_url || ev.image || ev.imageUrl || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop',
+      current_participants: ev.current_participants || ev.currentParticipants || ev.registeredCount || 0,
+      max_participants: ev.max_participants || ev.maxParticipants || ev.capacity || 0,
+      status: ev.status || ev.event_status || '',
+      // Convert is_registered to boolean properly: 1 -> true, 0 -> false, anything else -> false
+      is_registered: ev.is_registered === 1 || ev.is_registered === true || ev.isRegistered === 1 || ev.isRegistered === true
+    }));
+
+    console.log('Events cache:', eventsCache.length, 'events');
+    console.log('Sample event:', eventsCache[0]);
+
+    // If onlyMine, filter to show only registered events
+    if (onlyMine) {
+      eventsCache = eventsCache.filter(e => e.is_registered === true);
+      console.log('Filtered to registered events (mine):', eventsCache.length);
+    }
+
+    filteredEvents = [...eventsCache];
+    grid.innerHTML = eventsCache.length ? eventsCache.map(eventCard).join('') : '<div class="col-span-full text-center text-gray-500">Không có sự kiện nào.</div>';
+  } catch (err) {
+    console.error('Failed to load events', err);
+    grid.innerHTML = '<div class="col-span-full text-center text-red-500">Lỗi khi tải dữ liệu. Vui lòng thử lại sau.</div>';
+  } finally {
+    if (window.lucide && lucide.createIcons) lucide.createIcons();
+    renderCounts();
+  }
+}
+
+/* ===== SIDEBAR TOGGLE (mobile) ===== */
+(function bindSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  const openBtn = document.getElementById("btnOpenSidebar");
+  const closeBtn = document.getElementById("btnCloseSidebar");
+
+  openBtn.onclick = () => { sidebar.classList.add("open"); overlay.classList.remove("hidden"); };
+  closeBtn.onclick = () => { sidebar.classList.remove("open"); overlay.classList.add("hidden"); };
+  overlay.onclick = () => { sidebar.classList.remove("open"); overlay.classList.add("hidden"); };
+
+  // default show on desktop
+  if (window.innerWidth >= 1024) { sidebar.classList.add("open"); }
+})();
+
+/* ===== INIT ===== */
+document.addEventListener("DOMContentLoaded", () => {
+  // Bind filter events
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('filterCategory').addEventListener('change', applyFilters);
+  document.getElementById('filterDepartment').addEventListener('change', applyFilters);
+  document.getElementById('filterStatus').addEventListener('change', applyFilters);
+  
+  // detect if we should show only 'my events'
+  const urlParams = new URL(window.location.href).searchParams;
+  const showMine = urlParams.has('mine') || urlParams.get('mine') === '1';
+  fetchEvents(showMine).then(()=>{
+    // make card 'buttons' accessible via keyboard: Enter/Space activate the card link
+    document.querySelectorAll('div[role="button"]').forEach(el=>{
+      el.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' || e.key === ' ') {
+          const a = el.closest('a');
+          if(a) { a.click(); }
+        }
+      });
+    });
+  });
+
+  // Sidebar navigation: bind buttons with data-route attribute
+  document.querySelectorAll('#sidebar [data-route]').forEach(btn => {
+    btn.setAttribute('tabindex','0');
+    btn.addEventListener('click', () => {
+      const route = btn.getAttribute('data-route');
+      if(route) window.location.href = route;
+    });
+    btn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const route = btn.getAttribute('data-route');
+        if(route) window.location.href = route;
+      }
+    });
+  });
+
+  // Logout handler
+  const logoutBtn = document.getElementById('btnLogout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+        // Reset theme về mặc định
+        if (window.ThemeService) {
+          ThemeService.resetToDefault();
+        }
+        
+        // Xóa dữ liệu user
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('auth_token_user');
+        localStorage.removeItem('app_theme');
+        
+        window.location.href = '/Login.html';
+      }
+    });
+  }
+
+  // Attach filter event listeners
+  document.getElementById('searchInput')?.addEventListener('input', applyFilters);
+  document.getElementById('filterCategory')?.addEventListener('change', applyFilters);
+  document.getElementById('filterDepartment')?.addEventListener('change', applyFilters);
+  document.getElementById('filterStatus')?.addEventListener('change', applyFilters);
+});
+</script>
+<script>
+  // Page guard: allow student, admin, teacher (students should land here after login)
+  (function(){
+    try {
+      if (window.AuthService && typeof AuthService.requireRole === 'function') {
+        AuthService.requireRole(['student','admin','teacher']);
+        return;
+      }
+
+      // fallback: older authService instance
+      if (window.authService && typeof authService.getUser === 'function') {
+        const u = authService.getUser();
+        if (!u || !u.role) {
+          window.location.replace('/Login.html');
+          return;
+        }
+        // allow student/admin/teacher
+        const r = (u.role||'').toLowerCase();
+        if (!['student','admin','teacher'].includes(r)) {
+          window.location.replace('/Login.html');
+        }
+        return;
+      }
+
+      // last fallback: localStorage
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || localStorage.getItem('currentUser') || 'null');
+        const role = (user?.role || '').toLowerCase();
+        if (!user || !['student','admin','teacher'].includes(role)) {
+          window.location.replace('/Login.html');
+        }
+      } catch(e){ window.location.replace('/Login.html'); }
+    } catch (e) {
+      console.error('EventList guard error', e);
+      try { window.location.replace('/Login.html'); } catch(_){}
+    }
+  })();
+</script>
+<script src="/js/navigation.js"></script>
+<script src="/js/theme.js"></script>
+<script src="/js/notifications.js"></script>
+<script>
+  // ===== Code cập nhật user info đã được xử lý bởi navigation.js =====
+  
+  // Initialize dark mode
+  if (window.ThemeService) {
+    ThemeService.init();
+  }
+</script>
+
+  <!-- Notification Dropdown Panel -->
+  <div id="notificationDropdown" class="hidden fixed top-16 right-6 w-96 max-w-[calc(100vw-3rem)] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 animate-slideDown">
+    <!-- Header -->
+    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <h3 class="font-semibold text-gray-900 dark:text-white">Thông báo</h3>
+      <button id="btnMarkAllRead" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+        Đánh dấu đã đọc
+      </button>
+    </div>
+
+    <!-- Notification List -->
+    <div id="notificationList" class="overflow-y-auto max-h-96 divide-y divide-gray-100 dark:divide-gray-700">
+      <!-- Notifications will be rendered here -->
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+      <button id="btnClearAllRead" class="text-xs text-red-600 dark:text-red-400 hover:underline">
+        Xóa đã đọc
+      </button>
+      <a href="/NotificationList.html" class="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+        Xem tất cả
+      </a>
+    </div>
+  </div>
+
+  <!-- Header Component JavaScript -->
+  <script>
+    const HeaderComponent = {
+      updateNotificationBadge: async function() {
+        try {
+          const count = await window.NotificationService.getUnreadCount();
+          const badge = document.getElementById('notificationBadge');
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        } catch (error) {
+          console.error('Failed to update notification badge:', error);
+        }
+      },
+
+      updateMessageBadge: async function() {
+        try {
+          const count = 3; // Mock data
+          const badge = document.getElementById('messageBadge');
+          if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        } catch (error) {
+          console.error('Failed to update message badge:', error);
+        }
+      },
+
+      renderNotifications: async function() {
+        try {
+          const notifications = await window.NotificationService.fetchNotifications(5, false);
+          const container = document.getElementById('notificationList');
+          
+          if (!notifications || notifications.length === 0) {
+            container.innerHTML = `
+              <div class="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                Không có thông báo mới
+              </div>
+            `;
+            if (window.LanguageService) window.LanguageService._updatePageContent();
+            return;
+          }
+
+          container.innerHTML = notifications.map(notif => {
+            const icon = this._getNotificationIcon(notif.type);
+            const color = this._getNotificationColor(notif.type);
+            const timeAgo = this._formatTimeAgo(notif.created_at);
+            const isUnread = !notif.is_read;
+
+            return `
+              <div class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${isUnread ? 'bg-blue-50 dark:bg-blue-900/20' : ''}" 
+                   data-notification-id="${notif.notification_id}"
+                   onclick="HeaderComponent.handleNotificationClick(${notif.notification_id})">
+                <div class="flex items-start space-x-3">
+                  <div class="flex-shrink-0 w-10 h-10 rounded-full ${color} flex items-center justify-center">
+                    <i data-lucide="${icon}" class="w-5 h-5 text-white"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">${notif.title}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">${notif.message}</p>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">${timeAgo}</p>
+                  </div>
+                  ${isUnread ? '<div class="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full"></div>' : ''}
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
+        } catch (error) {
+          console.error('Failed to render notifications:', error);
+        }
+      },
+
+      handleNotificationClick: async function(notificationId) {
+        try {
+          await window.NotificationService.markAsRead(notificationId);
+          await this.updateNotificationBadge();
+          await this.renderNotifications();
+          this.closeNotificationDropdown();
+        } catch (error) {
+          console.error('Failed to handle notification click:', error);
+        }
+      },
+
+      toggleNotificationDropdown: function() {
+        const dropdown = document.getElementById('notificationDropdown');
+        const isHidden = dropdown.classList.contains('hidden');
+        
+        if (isHidden) {
+          dropdown.classList.remove('hidden');
+          this.renderNotifications();
+        } else {
+          dropdown.classList.add('hidden');
+        }
+      },
+
+      closeNotificationDropdown: function() {
+        document.getElementById('notificationDropdown').classList.add('hidden');
+      },
+
+      _getNotificationIcon: function(type) {
+        const icons = {
+          event_created: 'calendar-plus',
+          event_updated: 'calendar-clock',
+          event_cancelled: 'calendar-x',
+          registration_confirmed: 'check-circle',
+          registration_cancelled: 'x-circle',
+          event_reminder: 'bell',
+          attendance_marked: 'check-square',
+          message_received: 'message-circle',
+          announcement: 'megaphone',
+          system: 'info'
+        };
+        return icons[type] || 'bell';
+      },
+
+      _getNotificationColor: function(type) {
+        const colors = {
+          event_created: 'bg-green-500',
+          event_updated: 'bg-blue-500',
+          event_cancelled: 'bg-red-500',
+          registration_confirmed: 'bg-green-500',
+          registration_cancelled: 'bg-red-500',
+          event_reminder: 'bg-yellow-500',
+          attendance_marked: 'bg-green-500',
+          message_received: 'bg-blue-500',
+          announcement: 'bg-purple-500',
+          system: 'bg-gray-500'
+        };
+        return colors[type] || 'bg-gray-500';
+      },
+
+      _formatTimeAgo: function(timestamp) {
+        const now = Date.now();
+        const time = new Date(timestamp).getTime();
+        const diff = Math.floor((now - time) / 1000);
+
+        if (diff < 60) return 'Vừa xong';
+        if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+        return new Date(timestamp).toLocaleDateString('vi-VN');
+      },
+
+      init: function() {
+        const btnNotifications = document.getElementById('btnNotifications');
+        if (btnNotifications) {
+          btnNotifications.addEventListener('click', () => this.toggleNotificationDropdown());
+        }
+
+        // Search button functionality (scroll to search section)
+        const btnHeaderSearch = document.getElementById('btnHeaderSearch');
+        if (btnHeaderSearch) {
+          btnHeaderSearch.addEventListener('click', () => {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+              searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              searchInput.focus();
+            }
+          });
+        }
+
+        const btnMarkAllRead = document.getElementById('btnMarkAllRead');
+        if (btnMarkAllRead) {
+          btnMarkAllRead.addEventListener('click', async () => {
+            try {
+              await window.NotificationService.markAllAsRead();
+              await this.updateNotificationBadge();
+              await this.renderNotifications();
+            } catch (error) {
+              console.error('Failed to mark all as read:', error);
+            }
+          });
+        }
+
+        const btnClearAllRead = document.getElementById('btnClearAllRead');
+        if (btnClearAllRead) {
+          btnClearAllRead.addEventListener('click', async () => {
+            try {
+              await window.NotificationService.clearAllRead();
+              await this.updateNotificationBadge();
+              await this.renderNotifications();
+            } catch (error) {
+              console.error('Failed to clear all read:', error);
+            }
+          });
+        }
+
+        document.addEventListener('click', (e) => {
+          const dropdown = document.getElementById('notificationDropdown');
+          const btn = document.getElementById('btnNotifications');
+          if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+            this.closeNotificationDropdown();
+          }
+        });
+
+        this.updateNotificationBadge();
+        this.updateMessageBadge();
+        setInterval(() => this.updateNotificationBadge(), 30000);
+        setInterval(() => this.updateMessageBadge(), 60000);
+
+        window.addEventListener('notifications-updated', () => {
+          this.updateNotificationBadge();
+        });
+      }
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => HeaderComponent.init());
+    } else {
+      HeaderComponent.init();
+    }
+  </script>
+
+  <style>
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-slideDown {
+      animation: slideDown 0.2s ease-out;
+    }
+    #notificationBadge.hidden,
+    #messageBadge.hidden {
+      display: none;
+    }
+    #notificationBadge:not(.hidden),
+    #messageBadge:not(.hidden) {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+
+</body>
+</html>

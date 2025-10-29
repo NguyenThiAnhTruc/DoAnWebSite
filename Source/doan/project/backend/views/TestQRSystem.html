@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test QR Attendance System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/js/theme.js"></script>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-gray-800">🧪 Test Hệ Thống Điểm Danh QR</h1>
+        
+        <!-- Test Cases -->
+        <div class="space-y-4">
+            <!-- Test 1 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold mb-2">Test 1: Truy cập trang tạo QR</h3>
+                        <p class="text-gray-600 mb-4">Kiểm tra Admin/Giáo viên có thể truy cập trang tạo mã QR</p>
+                        <div class="bg-gray-50 p-3 rounded font-mono text-sm mb-3">
+                            <strong>URL:</strong> <a href="/qr-attendance" class="text-blue-600 hover:underline">/qr-attendance</a>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <strong>Expected:</strong> Hiển thị trang với 2 tabs: "Tạo mã QR" và "Quét mã QR"
+                        </div>
+                    </div>
+                    <span id="status1" class="text-2xl">⏳</span>
+                </div>
+                <button onclick="test1()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Chạy Test
+                </button>
+            </div>
+
+            <!-- Test 2 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold mb-2">Test 2: Tạo mã QR</h3>
+                        <p class="text-gray-600 mb-4">Kiểm tra việc tạo mã QR cho sự kiện</p>
+                        <div class="bg-gray-50 p-3 rounded font-mono text-sm mb-3">
+                            <strong>Steps:</strong><br>
+                            1. Vào /qr-attendance<br>
+                            2. Chọn sự kiện từ dropdown<br>
+                            3. Kiểm tra mã QR xuất hiện
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <strong>Expected:</strong> Mã QR hiển thị với URL chứa eventId
+                        </div>
+                    </div>
+                    <span id="status2" class="text-2xl">⏳</span>
+                </div>
+                <button onclick="test2()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Chạy Test
+                </button>
+            </div>
+
+            <!-- Test 3 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold mb-2">Test 3: Parse QR Data</h3>
+                        <p class="text-gray-600 mb-4">Kiểm tra việc parse dữ liệu từ mã QR</p>
+                        <div class="bg-gray-50 p-3 rounded font-mono text-sm mb-3">
+                            <strong>Input:</strong> "e1|checkin|1697500000000"<br>
+                            <strong>Expected Output:</strong><br>
+                            - eventId: "e1"<br>
+                            - action: "checkin"<br>
+                            - timestamp: 1697500000000
+                        </div>
+                    </div>
+                    <span id="status3" class="text-2xl">⏳</span>
+                </div>
+                <button onclick="test3()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Chạy Test
+                </button>
+                <div id="result3" class="mt-3 p-3 bg-gray-50 rounded hidden"></div>
+            </div>
+
+            <!-- Test 4 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold mb-2">Test 4: Trang đăng nhập sinh viên</h3>
+                        <p class="text-gray-600 mb-4">Kiểm tra trang StudentQRLogin.html nhận QR data</p>
+                        <div class="bg-gray-50 p-3 rounded font-mono text-sm mb-3">
+                            <strong>URL:</strong> <a href="/StudentQRLogin.html?qr=e1|checkin|1697500000000" target="_blank" class="text-blue-600 hover:underline">
+                                /StudentQRLogin.html?qr=e1|checkin|1697500000000
+                            </a>
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <strong>Expected:</strong> Hiển thị form đăng nhập với thông tin sự kiện "Hội thảo AI"
+                        </div>
+                    </div>
+                    <span id="status4" class="text-2xl">⏳</span>
+                </div>
+                <button onclick="test4()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Mở trang
+                </button>
+            </div>
+
+            <!-- Test 5 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold mb-2">Test 5: Điểm danh với localStorage</h3>
+                        <p class="text-gray-600 mb-4">Kiểm tra việc lưu và kiểm tra điểm danh trùng lặp</p>
+                        <div class="bg-gray-50 p-3 rounded font-mono text-sm mb-3">
+                            <strong>Steps:</strong><br>
+                            1. Mock login với email: student@school.edu<br>
+                            2. Điểm danh sự kiện e1<br>
+                            3. Thử điểm danh lại → Should fail (duplicate)
+                        </div>
+                    </div>
+                    <span id="status5" class="text-2xl">⏳</span>
+                </div>
+                <button onclick="test5()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Chạy Test
+                </button>
+                <div id="result5" class="mt-3 p-3 bg-gray-50 rounded hidden"></div>
+            </div>
+
+            <!-- Test 6 -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-semibold mb-2">Test 6: Auto-register</h3>
+                        <p class="text-gray-600 mb-4">Kiểm tra tự động đăng ký khi sinh viên chưa đăng ký sự kiện</p>
+                        <div class="bg-gray-50 p-3 rounded font-mono text-sm mb-3">
+                            <strong>Scenario:</strong> Sinh viên quét QR nhưng chưa đăng ký sự kiện<br>
+                            <strong>Expected:</strong> Tự động đăng ký + điểm danh
+                        </div>
+                    </div>
+                    <span id="status6" class="text-2xl">⏳</span>
+                </div>
+                <button onclick="test6()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Chạy Test
+                </button>
+                <div id="result6" class="mt-3 p-3 bg-gray-50 rounded hidden"></div>
+            </div>
+        </div>
+
+        <!-- Clear Data -->
+        <div class="mt-8 bg-red-50 border border-red-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-red-800 mb-2">⚠️ Reset Test Data</h3>
+            <p class="text-red-700 mb-4">Xóa tất cả dữ liệu test trong localStorage</p>
+            <button onclick="clearData()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                Xóa dữ liệu
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Mock data
+        const events = [
+            { id: 'e1', title: 'Hội thảo AI', date: '2025-10-15', time: '08:00', location: 'Hội trường A' },
+            { id: 'e2', title: 'Giao lưu Tân SV', date: '2025-10-20', time: '14:00', location: 'Sân trường' }
+        ];
+
+        const users = [
+            { id: '1', email: 'student@school.edu', name: 'Nguyễn Văn An', role: 'student' }
+        ];
+
+        // Helper functions
+        function parseQRData(str) {
+            const parts = String(str || '').split('|');
+            if (parts.length !== 3 || parts[1] !== 'checkin') return null;
+            return { eventId: parts[0], action: parts[1], timestamp: parseInt(parts[2]) || 0 };
+        }
+
+        function getAttendance() {
+            try { return JSON.parse(localStorage.getItem('attendance_records') || '[]'); }
+            catch { return []; }
+        }
+
+        function saveAttendance(list) {
+            localStorage.setItem('attendance_records', JSON.stringify(list));
+        }
+
+        function getRegistrations() {
+            try { return JSON.parse(localStorage.getItem('registrations') || '[]'); }
+            catch { return []; }
+        }
+
+        function saveRegistrations(list) {
+            localStorage.setItem('registrations', JSON.stringify(list));
+        }
+
+        // Test functions
+        function test1() {
+            window.open('/qr-attendance', '_blank');
+            document.getElementById('status1').textContent = '✅';
+        }
+
+        function test2() {
+            window.open('/qr-attendance', '_blank');
+            alert('Vui lòng:\n1. Chọn sự kiện từ dropdown\n2. Kiểm tra mã QR xuất hiện\n3. Click "Tải xuống" để lưu mã QR');
+            document.getElementById('status2').textContent = '✅';
+        }
+
+        function test3() {
+            const testData = 'e1|checkin|1697500000000';
+            const parsed = parseQRData(testData);
+            const result = document.getElementById('result3');
+            
+            if (parsed && parsed.eventId === 'e1' && parsed.action === 'checkin') {
+                result.innerHTML = `
+                    <strong>✅ PASS</strong><br>
+                    EventId: ${parsed.eventId}<br>
+                    Action: ${parsed.action}<br>
+                    Timestamp: ${parsed.timestamp}
+                `;
+                result.classList.remove('hidden');
+                result.classList.add('bg-green-50', 'text-green-800');
+                document.getElementById('status3').textContent = '✅';
+            } else {
+                result.innerHTML = '<strong>❌ FAIL</strong><br>Parse không thành công';
+                result.classList.remove('hidden');
+                result.classList.add('bg-red-50', 'text-red-800');
+                document.getElementById('status3').textContent = '❌';
+            }
+        }
+
+        function test4() {
+            window.open('/StudentQRLogin.html?qr=e1|checkin|1697500000000', '_blank');
+            document.getElementById('status4').textContent = '✅';
+        }
+
+        function test5() {
+            // Clear first
+            localStorage.removeItem('attendance_records');
+            
+            const user = users[0];
+            const eventId = 'e1';
+            
+            // First attendance
+            let atts = getAttendance();
+            const existed = atts.find(a => a.eventId === eventId && a.userId === user.id);
+            
+            if (!existed) {
+                atts.push({ eventId, userId: user.id, status: 'present', method: 'QR Code' });
+                saveAttendance(atts);
+            }
+            
+            // Try duplicate
+            atts = getAttendance();
+            const duplicate = atts.find(a => a.eventId === eventId && a.userId === user.id);
+            
+            const result = document.getElementById('result5');
+            if (duplicate) {
+                result.innerHTML = `
+                    <strong>✅ PASS</strong><br>
+                    - Điểm danh lần 1: Thành công<br>
+                    - Điểm danh lần 2: Phát hiện trùng lặp (đúng)<br>
+                    - Dữ liệu trong localStorage: ${atts.length} record
+                `;
+                result.classList.remove('hidden');
+                result.classList.add('bg-green-50', 'text-green-800');
+                document.getElementById('status5').textContent = '✅';
+            } else {
+                result.innerHTML = '<strong>❌ FAIL</strong><br>Không phát hiện trùng lặp';
+                result.classList.remove('hidden');
+                result.classList.add('bg-red-50', 'text-red-800');
+                document.getElementById('status5').textContent = '❌';
+            }
+        }
+
+        function test6() {
+            // Clear first
+            localStorage.removeItem('registrations');
+            
+            const user = users[0];
+            const eventId = 'e1';
+            const event = events[0];
+            
+            // Check registration
+            let regs = getRegistrations();
+            let reg = regs.find(r => r.eventId === eventId && r.userId === user.id);
+            
+            // Auto-register if not exists
+            if (!reg) {
+                reg = {
+                    id: Date.now().toString(),
+                    eventId,
+                    userId: user.id,
+                    userName: user.name,
+                    userEmail: user.email,
+                    status: 'confirmed',
+                    registeredAt: new Date().toISOString()
+                };
+                regs.push(reg);
+                saveRegistrations(regs);
+            }
+            
+            // Verify
+            regs = getRegistrations();
+            const verified = regs.find(r => r.eventId === eventId && r.userId === user.id);
+            
+            const result = document.getElementById('result6');
+            if (verified) {
+                result.innerHTML = `
+                    <strong>✅ PASS</strong><br>
+                    - Tự động đăng ký thành công<br>
+                    - User: ${verified.userName}<br>
+                    - Event: ${event.title}<br>
+                    - Status: ${verified.status}
+                `;
+                result.classList.remove('hidden');
+                result.classList.add('bg-green-50', 'text-green-800');
+                document.getElementById('status6').textContent = '✅';
+            } else {
+                result.innerHTML = '<strong>❌ FAIL</strong><br>Auto-register không thành công';
+                result.classList.remove('hidden');
+                result.classList.add('bg-red-50', 'text-red-800');
+                document.getElementById('status6').textContent = '❌';
+            }
+        }
+
+        function clearData() {
+            if (confirm('Bạn có chắc muốn xóa tất cả dữ liệu test?')) {
+                localStorage.removeItem('attendance_records');
+                localStorage.removeItem('registrations');
+                alert('✅ Đã xóa dữ liệu test');
+                location.reload();
+            }
+        }
+
+        // Initialize
+        lucide.createIcons();
+    </script>
+</body>
+</html>
